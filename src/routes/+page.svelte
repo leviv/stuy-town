@@ -1,4 +1,20 @@
 <script lang="ts">
+	// TypeScript declarations for WebSerial API
+	declare global {
+		interface Navigator {
+			serial: Serial;
+		}
+		interface Serial {
+			requestPort(): Promise<SerialPort>;
+		}
+		interface SerialPort {
+			open(options: { baudRate: number }): Promise<void>;
+			close(): Promise<void>;
+			readable: ReadableStream;
+			writable: WritableStream;
+		}
+	}
+
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
 	// @ts-ignore
@@ -18,6 +34,17 @@
 	let scene: THREE.Scene;
 	let controls: OrbitControls;
 	const bgColor = 0xffffff;
+
+	// Arduino orientation variables
+	let heading = 0.0;
+	let pitch = 0.0;
+	let roll = 0.0;
+	let arduinoModel: THREE.Object3D | null = null;
+
+	// WebSerial variables
+	let port: SerialPort | null = null;
+	let reader: ReadableStreamDefaultReader | null = null;
+	let isConnected = false;
 
 	onMount(() => {
 		scene = new THREE.Scene();
@@ -53,6 +80,30 @@
 		// Lighting controls folder
 		const lightingFolder = gui.addFolder('Lighting');
 		lightingFolder.open();
+
+		// Camera controls folder
+		const cameraFolder = gui.addFolder('Camera');
+		cameraFolder.open();
+
+		// Camera flight control
+		const cameraSettings = { autoFlight: true };
+		cameraFolder.add(cameraSettings, 'autoFlight').name('Auto Flight');
+
+		// Arduino controls folder
+		const arduinoFolder = gui.addFolder('Arduino Control');
+		arduinoFolder.open();
+
+		// Arduino connection control
+		const arduinoSettings = {
+			enabled: false,
+			status: 'Disconnected',
+			connect: () => connectArduino(),
+			disconnect: () => disconnectArduino()
+		};
+		arduinoFolder.add(arduinoSettings, 'enabled').name('Arduino Control').listen();
+		arduinoFolder.add(arduinoSettings, 'status').name('Status').listen();
+		arduinoFolder.add(arduinoSettings, 'connect').name('Connect Arduino');
+		arduinoFolder.add(arduinoSettings, 'disconnect').name('Disconnect Arduino');
 
 		// Shaders
 		const post = new Post(renderer);
@@ -148,6 +199,8 @@
 			(gltf: { scene: THREE.Object3D<THREE.Object3DEventMap> }) => {
 				console.log('Model loaded successfully');
 				const model = gltf.scene;
+				arduinoModel = model; // Store reference for Arduino control
+
 				gltf.scene.traverse((child) => {
 					if ((child as THREE.Mesh).isMesh) {
 						const mesh = child as THREE.Mesh;
@@ -186,35 +239,228 @@
 			}
 		);
 
+		// Arduino WebSerial functions
+		async function connectArduino() {
+			try {
+				if (!(navigator as any).serial) {
+					alert('WebSerial is not supported in this browser. Try Chrome or MS Edge.');
+					return;
+				}
+
+				// Check if already connected
+				if (isConnected && port) {
+					console.log('Arduino already connected');
+					return;
+				}
+
+				// Disconnect any existing connection first
+				await disconnectArduino();
+
+				arduinoSettings.status = 'Connecting...';
+				console.log('Requesting serial port...');
+				port = await (navigator as any).serial.requestPort();
+
+				console.log('Opening serial port...');
+				await port.open({
+					baudRate: 9600,
+					dataBits: 8,
+					stopBits: 1,
+					parity: 'none',
+					flowControl: 'none'
+				});
+
+				const textDecoder = new TextDecoderStream();
+				const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+				reader = textDecoder.readable.getReader();
+
+				isConnected = true;
+				arduinoSettings.enabled = true;
+				arduinoSettings.status = 'Connected';
+				console.log('Arduino connected successfully');
+
+				// Wait a moment for Arduino to initialize
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+
+				// Send initial request for data
+				try {
+					const writer = port.writable.getWriter();
+					await writer.write(new TextEncoder().encode('x'));
+					writer.releaseLock();
+					console.log('Initial data request sent');
+				} catch (writeError) {
+					console.error('Error sending initial request:', writeError);
+				}
+
+				// Start reading data
+				readArduinoData();
+			} catch (error) {
+				console.error('Error connecting to Arduino:', error);
+
+				// Provide more specific error messages
+				let errorMessage = 'Error connecting to Arduino: ';
+				const errorMsg = error instanceof Error ? error.message : String(error);
+
+				if (errorMsg.includes('Failed to open serial port')) {
+					errorMessage +=
+						'Port may be in use by another application (like Arduino IDE). Please close any other programs using the serial port and try again.';
+				} else if (errorMsg.includes('No port selected')) {
+					errorMessage += 'No port was selected.';
+				} else {
+					errorMessage += errorMsg;
+				}
+
+				alert(errorMessage);
+
+				// Clean up on error
+				arduinoSettings.status = 'Error';
+				await disconnectArduino();
+			}
+		}
+
+		async function disconnectArduino() {
+			try {
+				console.log('Disconnecting Arduino...');
+
+				// Set flags first to stop any ongoing operations
+				isConnected = false;
+				arduinoSettings.enabled = false;
+				arduinoSettings.status = 'Disconnecting...';
+
+				// Close reader
+				if (reader) {
+					try {
+						await reader.cancel();
+					} catch (readerError) {
+						console.warn('Error closing reader:', readerError);
+					}
+					reader = null;
+				}
+
+				// Close port
+				if (port) {
+					try {
+						await port.close();
+					} catch (portError) {
+						console.warn('Error closing port:', portError);
+					}
+					port = null;
+				}
+
+				arduinoSettings.status = 'Disconnected';
+				console.log('Arduino disconnected successfully');
+			} catch (error) {
+				console.error('Error disconnecting Arduino:', error);
+				// Force reset even if there's an error
+				isConnected = false;
+				arduinoSettings.enabled = false;
+				reader = null;
+				port = null;
+			}
+		}
+
+		async function readArduinoData() {
+			try {
+				while (reader && isConnected) {
+					const { value, done } = await reader.read();
+					if (done) break;
+
+					// Parse incoming data (expecting "heading,roll,pitch\r\n" format)
+					const lines = value.split('\n');
+					for (const line of lines) {
+						const trimmedLine = line.trim();
+						if (trimmedLine.length > 0) {
+							const values = trimmedLine.split(',');
+							if (values.length >= 3) {
+								heading = parseFloat(values[0]);
+								roll = parseFloat(values[1]);
+								pitch = parseFloat(values[2]);
+
+								// Send request for next data point
+								if (port && port.writable) {
+									const writer = port.writable.getWriter();
+									await writer.write(new TextEncoder().encode('x'));
+									writer.releaseLock();
+								}
+							}
+						}
+					}
+				}
+			} catch (error) {
+				console.error('Error reading Arduino data:', error);
+				isConnected = false;
+				arduinoSettings.enabled = false;
+			}
+		}
+
 		const render = () => {
-			cube.rotation.x += 0.01;
-			cube.rotation.y += 0.01;
-			controls.update();
+			// Apply Arduino rotation to the cube
+			if (arduinoSettings.enabled) {
+				// Convert degrees to radians and apply to cube rotation
+				cube.rotation.x = THREE.MathUtils.degToRad(pitch);
+				cube.rotation.y = THREE.MathUtils.degToRad(heading);
+				cube.rotation.z = THREE.MathUtils.degToRad(roll);
+			} else {
+				// Default cube animation when Arduino is not connected
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
+			}
 
-			// // Animate noisiness on a loop (repeats every 4 seconds)
-			// const time = performance.now() * 0.001; // Convert to seconds
-			// const baseNoisiness = 0.01; // Base noisiness value
-			// const wiggleAmount = 0.02; // Larger wiggle amount for more visible effect
-			// const wiggleSpeed = Math.PI * 1; // Completes cycle every 4 seconds (2π / 4 = π/2)
-			// const noisinessValue = baseNoisiness + Math.sin(time * wiggleSpeed) * wiggleAmount;
+			if (cameraSettings.autoFlight) {
+				// Camera flight path animation (60 second loop)
+				const time = (performance.now() * 0.001) % 60; // 60 second loop
+				const t = time / 60; // Normalize to 0-1
 
-			// // Also animate edge noisiness with a different phase for more organic effect
-			// const baseEdgeNoisiness = 0.01;
-			// const edgeWiggleAmount = 0.006;
-			// const edgeNoisinessValue =
-			// 	baseEdgeNoisiness + Math.sin(time * wiggleSpeed + Math.PI / 3) * edgeWiggleAmount;
+				// Define waypoints for camera path (adjust these based on your building layout)
+				const cameraPath = new THREE.CatmullRomCurve3(
+					[
+						new THREE.Vector3(15, 8, 15), // Start position - wide perspective from corner
+						new THREE.Vector3(12, 6, 8), // Moving closer but still wide
+						new THREE.Vector3(5, 3, 6), // Medium distance view
+						new THREE.Vector3(-3, 2, 4), // Between buildings (low)
+						new THREE.Vector3(-10, 7, -5), // Far back, elevated view
+						new THREE.Vector3(-8, 10, -12), // High wide view from behind
+						new THREE.Vector3(2, 8, -15), // Far side view, elevated
+						new THREE.Vector3(10, 6, -10), // Wide angle from other side
+						new THREE.Vector3(18, 5, -2), // Very wide perspective
+						new THREE.Vector3(16, 7, 8), // Coming back around wide
+						new THREE.Vector3(15, 8, 15) // Back to start (smooth loop)
+					],
+					true
+				); // true = closed loop
 
-			// // Update the post-processing uniforms
-			// if (post && post.renderPass && post.renderPass.shader) {
-			// 	post.renderPass.shader.uniforms.noisiness.value = noisinessValue;
-			// 	// post.renderPass.shader.uniforms.edgeNoisiness.value = edgeNoisinessValue;
-			// 	console.log(
-			// 		'Animating noisiness:',
-			// 		noisinessValue.toFixed(4),
-			// 		'edgeNoisiness:',
-			// 		edgeNoisinessValue.toFixed(4)
-			// 	);
-			// }
+				// Define look-at targets (what the camera should focus on)
+				const lookAtPath = new THREE.CatmullRomCurve3(
+					[
+						new THREE.Vector3(0, 1, 0), // Center of buildings
+						new THREE.Vector3(-2, 1, -1), // Different building area
+						new THREE.Vector3(-1, 1, 0), // Slightly offset center
+						new THREE.Vector3(-2, 1, -1), // Different building area
+						new THREE.Vector3(0, 2, -2), // Behind center
+						new THREE.Vector3(1, 1, 0), // Side area
+						new THREE.Vector3(2, 1, 1), // Another side
+						new THREE.Vector3(0, 1, 2), // Front area
+						new THREE.Vector3(-1, 1, 1), // Slight offset
+						new THREE.Vector3(0, 2, 0), // Back to center
+						new THREE.Vector3(0, 1, 0) // Ensure smooth loop
+					],
+					true
+				); // true = closed loop
+
+				// Get current position and look-at point from curves
+				const cameraPosition = cameraPath.getPoint(t);
+				const lookAtTarget = lookAtPath.getPoint(t);
+
+				// Update camera position and orientation
+				camera.position.copy(cameraPosition);
+				camera.lookAt(lookAtTarget);
+
+				// Disable OrbitControls during flight
+				controls.enabled = false;
+			} else {
+				// Enable manual camera control
+				controls.enabled = true;
+				controls.update();
+			}
 
 			// Post-processing handles the final render to screen
 			post.render(scene, camera);
