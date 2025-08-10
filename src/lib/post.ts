@@ -33,10 +33,13 @@ uniform sampler2D normalTexture;
 uniform sampler2D paperTexture;
 uniform sampler2D noiseTexture;
 uniform vec3 inkColor;
+uniform vec3 edgeColor;
 uniform float noiseScale;
 uniform float scale;
 uniform float thickness;
+uniform float edgeThickness;
 uniform float noisiness;
+uniform float edgeNoisiness;
 uniform float angle;
 uniform float contour;
 uniform float divergence;
@@ -116,9 +119,16 @@ float fbm5(vec3 v) {
   return result;
 }
 
+// Manual derivative calculation for older GLSL
+vec2 getDerivative(vec2 uv, vec2 resolution) {
+  float eps = 1.0 / min(resolution.x, resolution.y);
+  return vec2(eps, 0.0);
+}
+
 float texh(in vec2 p, in float lum) {
-  // Simplified version without derivatives
-  float e = thickness * 0.01; // Use a fixed edge threshold
+  vec2 resolution = vec2(1024.0, 1024.0); // Fixed resolution
+  vec2 deriv = getDerivative(p, resolution);
+  float e = thickness * max(deriv.x, deriv.y) * 10.0; // Use manual derivative
   
   if (lum < 0.5) {
     float v = abs(mod(p.y+1., 16.0));
@@ -143,8 +153,11 @@ float lines( in float l, in vec2 fragCoord, in vec2 resolution, in float thickne
 
   float c = (.5 + .5 * sin(uv.x*.5));
   float f = (c+thickness)*l;
-  // Use a fixed edge threshold instead of derivatives
-  float e = 0.01; 
+  
+  // Calculate derivative manually for older GLSL
+  vec2 deriv = getDerivative(fragCoord, resolution);
+  float e = 1. * length(deriv);
+  
   f = smoothstep(.5-e, .5+e, f);
   return f;
 }
@@ -195,10 +208,23 @@ void main() {
     }
   }
   
-  vec4 paper = texture2D(paperTexture, .00025 * vUv*size);
-  gl_FragColor.rgb = blendDarken(paper.rgb, inkColor/255., 1.-hatch);
-  //gl_FragColor.rgb = blendDarken(gl_FragColor.rgb, inkColor/255., 1.-normalEdge);
+  vec4 paper = texture2D(paperTexture, .00025 * vUv * size);
+  
+  // Apply hatching with ink color
+  vec3 hatchedColor = blendDarken(paper.rgb, inkColor/255., 1.-hatch);
+  
+  // Apply edge detection with edge color using edgeThickness and separate edgeNoisiness
+  float edgeSs = noiseScale * 1.;
+  vec2 edgeOffset = edgeNoisiness * vec2(fbm3(vec3(edgeSs*vUv,1.)), fbm3(vec3(edgeSs*vUv.yx,1.)));
+  vec2 edgeUv = vUv + edgeOffset;
+  
+  float finalNormalEdge = length(sobel(normalTexture, edgeUv, size, 3. * edgeThickness));
+  finalNormalEdge = 1.-aastep(.5, finalNormalEdge);
+  
+  // Blend the edge color over the hatched result
+  gl_FragColor.rgb = blendDarken(hatchedColor, edgeColor/255., 1.-finalNormalEdge);
   gl_FragColor.a = 1.;
+  
 }
 `;
 
@@ -209,29 +235,35 @@ class Post {
   private params: {
     scale?: number;
     thickness?: number;
+    edgeThickness?: number;
     noiseScale?: number;
     noisiness?: number;
+    edgeNoisiness?: number;
     divergence?: number;
     angle?: number;
     contour?: number;
     inkColor?: Color;
+    edgeColor?: Color;
     paper?: boolean;
   };
-  private renderPass: ShaderPass;
+  renderPass: ShaderPass;
 
   constructor(renderer: WebGLRenderer) {
     this.renderer = renderer;
     this.colorFBO = getFBO(1, 1);
     this.normalFBO = getFBO(1, 1);
     this.params = {
-      scale: 0.5,
-      noiseScale: 0.72,
-      angle: 2,
+      scale: 1.5,
+      noiseScale: 0.45,
+      angle: 2.7,
       divergence: 1,
-      thickness: 0.72,
-      contour: 1.2,
-      noisiness: 0.007,
+      thickness: 0.8,
+      edgeThickness: .3,
+      contour: .8,
+      noisiness: 0.011,
+      edgeNoisiness: 0.01,
       inkColor: new Color(68, 107, 147),
+      edgeColor: new Color(0, 0, 0), // Black edges by default
     };
     const shader = new RawShaderMaterial({
       uniforms: {
@@ -240,19 +272,25 @@ class Post {
         normalTexture: { value: this.normalFBO.texture },
         noiseTexture: { value: noiseTexture },
         inkColor: { value: this.params.inkColor },
+        edgeColor: { value: this.params.edgeColor },
         scale: { value: this.params.scale },
         divergence: { value: this.params.divergence },
         thickness: { value: this.params.thickness },
+        edgeThickness: { value: this.params.edgeThickness },
         contour: { value: this.params.contour },
         noiseScale: { value: this.params.noiseScale },
         noisiness: { value: this.params.noisiness },
+        edgeNoisiness: { value: this.params.edgeNoisiness },
         angle: { value: this.params.angle },
       },
       vertexShader: orthoVs,
       fragmentShader,
     });
     this.renderPass = new ShaderPass(renderer, shader);
+    console.log("inkColor:", this.params.inkColor);
   }
+
+  
 
   setSize(w: number, h: number) {
     this.normalFBO.setSize(w, h);
@@ -284,6 +322,11 @@ class Post {
       .onChange(async (v: number) => {
         this.renderPass.shader.uniforms.thickness.value = v;
       });
+    controllers["edgeThickness"] = gui
+      .add(this.params, "edgeThickness", 0, 10)
+      .onChange(async (v: number) => {
+        this.renderPass.shader.uniforms.edgeThickness.value = v;
+      });
     controllers["noiseScale"] = gui
       .add(this.params, "noiseScale", 0.1, 1)
       .onChange(async (v: number) => {
@@ -293,6 +336,11 @@ class Post {
       .add(this.params, "noisiness", 0, 0.02)
       .onChange(async (v: number) => {
         this.renderPass.shader.uniforms.noisiness.value = v;
+      });
+    controllers["edgeNoisiness"] = gui
+      .add(this.params, "edgeNoisiness", 0, 0.02)
+      .onChange(async (v: number) => {
+        this.renderPass.shader.uniforms.edgeNoisiness.value = v;
       });
     controllers["divergence"] = gui
       .add(this.params, "divergence", 0, 1)
@@ -311,8 +359,17 @@ class Post {
       });
     controllers["inkColor"] = gui
       .addColor(this.params, "inkColor")
-      .onChange(async (v: Color) => {
-        this.renderPass.shader.uniforms.inkColor.value.copy(v);
+      .onChange(async (v: { r: number; g: number; b: number }) => {
+        console.log("inkColor change:", v);
+        // lil-gui provides RGB values in 0-1 range, convert to 0-255 range
+        this.renderPass.shader.uniforms.inkColor.value.setRGB(v.r * 255, v.g * 255, v.b * 255);
+      });
+    controllers["edgeColor"] = gui
+      .addColor(this.params, "edgeColor")
+      .onChange(async (v: { r: number; g: number; b: number }) => {
+        console.log("edgeColor change:", v);
+        // lil-gui provides RGB values in 0-1 range, convert to 0-255 range
+        this.renderPass.shader.uniforms.edgeColor.value.setRGB(v.r * 255, v.g * 255, v.b * 255);
       });
     controllers["paper"] = generatePaperParams(gui, this.renderPass.shader);
     return controllers;

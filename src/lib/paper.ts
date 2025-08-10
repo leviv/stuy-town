@@ -9,13 +9,13 @@ type Paper = {
   promise: Promise<void> | null;
 };
 const papers: Record<string, Paper> = {
-  "Craft light": { file: "Craft_Light.jpg", texture: null, promise: null },
-  "Craft rough": { file: "Craft_Rough.jpg", texture: null, promise: null },
   "Watercolor cold press": {
     file: "Watercolor_ColdPress.jpg",
     texture: null,
     promise: null,
   },
+  "Craft light": { file: "Craft_Light.jpg", texture: null, promise: null },
+  "Craft rough": { file: "Craft_Rough.jpg", texture: null, promise: null },
   Parchment: { file: "Parchment.jpg", texture: null, promise: null },
 };
 
