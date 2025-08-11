@@ -259,7 +259,7 @@ class Post {
       divergence: 1,
       thickness: 0.8,
       edgeThickness: .3,
-      contour: .8,
+      contour: 2.2,
       noisiness: 0.011,
       edgeNoisiness: 0.01,
       inkColor: new Color(68, 107, 147),

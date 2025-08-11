@@ -1,20 +1,4 @@
 <script lang="ts">
-	// TypeScript declarations for WebSerial API
-	declare global {
-		interface Navigator {
-			serial: Serial;
-		}
-		interface Serial {
-			requestPort(): Promise<SerialPort>;
-		}
-		interface SerialPort {
-			open(options: { baudRate: number }): Promise<void>;
-			close(): Promise<void>;
-			readable: ReadableStream;
-			writable: WritableStream;
-		}
-	}
-
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
 	// @ts-ignore
@@ -25,6 +9,7 @@
 	import { Post } from '$lib/post.js';
 	import { Material } from '$lib/Material';
 	import { generateParams as generateEnvParams } from '$lib/envMap';
+	import { ArduinoController, type ArduinoData, type ArduinoStatus } from '$lib/arduino';
 	import GUI from 'lil-gui';
 
 	// Canvas element reference
@@ -41,20 +26,18 @@
 	let roll = 0.0;
 	let arduinoModel: THREE.Object3D | null = null;
 
-	// WebSerial variables
-	let port: SerialPort | null = null;
-	let reader: ReadableStreamDefaultReader | null = null;
-	let isConnected = false;
+	// Arduino controller
+	let arduino: ArduinoController;
 
 	onMount(() => {
 		scene = new THREE.Scene();
 
-		// Axes helper
-		// const axesHelper = new THREE.AxesHelper(5);
-		// scene.add(axesHelper);
+		// Calculate canvas dimensions (window width minus sidebar width)
+		const canvasWidth = window.innerWidth - 400;
+		const canvasHeight = window.innerHeight;
 
 		// Camera
-		camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10000);
+		camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 10000);
 		camera.position.set(5, 5, 5);
 
 		// Renderer
@@ -65,7 +48,7 @@
 			powerPreference: 'high-performance'
 		});
 		renderer.setPixelRatio(window.devicePixelRatio);
-		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.setSize(canvasWidth, canvasHeight);
 		renderer.setClearColor(bgColor);
 		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -93,12 +76,27 @@
 		const arduinoFolder = gui.addFolder('Arduino Control');
 		arduinoFolder.open();
 
+		// Initialize Arduino controller
+		arduino = new ArduinoController(
+			(data: ArduinoData) => {
+				// Update orientation data when received
+				heading = data.heading;
+				pitch = data.pitch;
+				roll = data.roll;
+			},
+			(status: ArduinoStatus) => {
+				// Update GUI status
+				arduinoSettings.enabled = status.enabled;
+				arduinoSettings.status = status.status;
+			}
+		);
+
 		// Arduino connection control
 		const arduinoSettings = {
 			enabled: false,
 			status: 'Disconnected',
-			connect: () => connectArduino(),
-			disconnect: () => disconnectArduino()
+			connect: () => arduino.connect(),
+			disconnect: () => arduino.disconnect()
 		};
 		arduinoFolder.add(arduinoSettings, 'enabled').name('Arduino Control').listen();
 		arduinoFolder.add(arduinoSettings, 'status').name('Status').listen();
@@ -107,7 +105,7 @@
 
 		// Shaders
 		const post = new Post(renderer);
-		post.setSize(window.innerWidth, window.innerHeight);
+		post.setSize(canvasWidth, canvasHeight);
 
 		const material = new Material({
 			color: 0x808080,
@@ -181,11 +179,14 @@
 
 		// Resize the canvas and update camera aspect ratio on window resize
 		window.addEventListener('resize', () => {
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			camera.aspect = window.innerWidth / window.innerHeight;
+			const canvasWidth = window.innerWidth - 400;
+			const canvasHeight = window.innerHeight;
+
+			renderer.setSize(canvasWidth, canvasHeight);
+			camera.aspect = canvasWidth / canvasHeight;
 			camera.updateProjectionMatrix();
 			// Also update post-processing size
-			post.setSize(window.innerWidth, window.innerHeight);
+			post.setSize(canvasWidth, canvasHeight);
 		});
 
 		const geometry = new THREE.BoxGeometry();
@@ -197,7 +198,6 @@
 		loader.load(
 			'stuy-town.gltf',
 			(gltf: { scene: THREE.Object3D<THREE.Object3DEventMap> }) => {
-				console.log('Model loaded successfully');
 				const model = gltf.scene;
 				arduinoModel = model; // Store reference for Arduino control
 
@@ -227,9 +227,7 @@
 				model.position.y = -box.min.y; // Move up so bottom is at y=0
 
 				scene.add(model);
-				console.log('Model placed successfully?');
-				console.log('Model size:', size);
-				console.log('Model center:', center);
+				console.log('Model lodaded');
 			},
 			(xhr: { loaded: number; total: number }) => {
 				console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
@@ -239,162 +237,9 @@
 			}
 		);
 
-		// Arduino WebSerial functions
-		async function connectArduino() {
-			try {
-				if (!(navigator as any).serial) {
-					alert('WebSerial is not supported in this browser. Try Chrome or MS Edge.');
-					return;
-				}
-
-				// Check if already connected
-				if (isConnected && port) {
-					console.log('Arduino already connected');
-					return;
-				}
-
-				// Disconnect any existing connection first
-				await disconnectArduino();
-
-				arduinoSettings.status = 'Connecting...';
-				console.log('Requesting serial port...');
-				port = await (navigator as any).serial.requestPort();
-
-				console.log('Opening serial port...');
-				await port.open({
-					baudRate: 9600,
-					dataBits: 8,
-					stopBits: 1,
-					parity: 'none',
-					flowControl: 'none'
-				});
-
-				const textDecoder = new TextDecoderStream();
-				const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-				reader = textDecoder.readable.getReader();
-
-				isConnected = true;
-				arduinoSettings.enabled = true;
-				arduinoSettings.status = 'Connected';
-				console.log('Arduino connected successfully');
-
-				// Wait a moment for Arduino to initialize
-				await new Promise((resolve) => setTimeout(resolve, 2000));
-
-				// Send initial request for data
-				try {
-					const writer = port.writable.getWriter();
-					await writer.write(new TextEncoder().encode('x'));
-					writer.releaseLock();
-					console.log('Initial data request sent');
-				} catch (writeError) {
-					console.error('Error sending initial request:', writeError);
-				}
-
-				// Start reading data
-				readArduinoData();
-			} catch (error) {
-				console.error('Error connecting to Arduino:', error);
-
-				// Provide more specific error messages
-				let errorMessage = 'Error connecting to Arduino: ';
-				const errorMsg = error instanceof Error ? error.message : String(error);
-
-				if (errorMsg.includes('Failed to open serial port')) {
-					errorMessage +=
-						'Port may be in use by another application (like Arduino IDE). Please close any other programs using the serial port and try again.';
-				} else if (errorMsg.includes('No port selected')) {
-					errorMessage += 'No port was selected.';
-				} else {
-					errorMessage += errorMsg;
-				}
-
-				alert(errorMessage);
-
-				// Clean up on error
-				arduinoSettings.status = 'Error';
-				await disconnectArduino();
-			}
-		}
-
-		async function disconnectArduino() {
-			try {
-				console.log('Disconnecting Arduino...');
-
-				// Set flags first to stop any ongoing operations
-				isConnected = false;
-				arduinoSettings.enabled = false;
-				arduinoSettings.status = 'Disconnecting...';
-
-				// Close reader
-				if (reader) {
-					try {
-						await reader.cancel();
-					} catch (readerError) {
-						console.warn('Error closing reader:', readerError);
-					}
-					reader = null;
-				}
-
-				// Close port
-				if (port) {
-					try {
-						await port.close();
-					} catch (portError) {
-						console.warn('Error closing port:', portError);
-					}
-					port = null;
-				}
-
-				arduinoSettings.status = 'Disconnected';
-				console.log('Arduino disconnected successfully');
-			} catch (error) {
-				console.error('Error disconnecting Arduino:', error);
-				// Force reset even if there's an error
-				isConnected = false;
-				arduinoSettings.enabled = false;
-				reader = null;
-				port = null;
-			}
-		}
-
-		async function readArduinoData() {
-			try {
-				while (reader && isConnected) {
-					const { value, done } = await reader.read();
-					if (done) break;
-
-					// Parse incoming data (expecting "heading,roll,pitch\r\n" format)
-					const lines = value.split('\n');
-					for (const line of lines) {
-						const trimmedLine = line.trim();
-						if (trimmedLine.length > 0) {
-							const values = trimmedLine.split(',');
-							if (values.length >= 3) {
-								heading = parseFloat(values[0]);
-								roll = parseFloat(values[1]);
-								pitch = parseFloat(values[2]);
-
-								// Send request for next data point
-								if (port && port.writable) {
-									const writer = port.writable.getWriter();
-									await writer.write(new TextEncoder().encode('x'));
-									writer.releaseLock();
-								}
-							}
-						}
-					}
-				}
-			} catch (error) {
-				console.error('Error reading Arduino data:', error);
-				isConnected = false;
-				arduinoSettings.enabled = false;
-			}
-		}
-
 		const render = () => {
 			// Apply Arduino rotation to the cube
-			if (arduinoSettings.enabled) {
+			if (arduino.connected) {
 				// Convert degrees to radians and apply to cube rotation
 				cube.rotation.x = THREE.MathUtils.degToRad(pitch);
 				cube.rotation.y = THREE.MathUtils.degToRad(heading);
@@ -472,14 +317,59 @@
 	});
 </script>
 
-<div bind:this={canvasContainer}></div>
-
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<div class="app-container">
+	<div class="sidebar">
+		<h1>Welcome to SvelteKit</h1>
+		<p>
+			Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
+		</p>
+	</div>
+	<div class="canvas-container" bind:this={canvasContainer}></div>
+</div>
 
 <style>
 	:global(body) {
 		margin: 0;
 		overflow: hidden; /* Prevent scrollbars */
+	}
+
+	.app-container {
+		display: flex;
+		width: 100vw;
+		height: 100vh;
+	}
+
+	.sidebar {
+		width: 400px;
+		background-color: #f5f5f5;
+		padding: 20px;
+		box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+		overflow-y: auto;
+		z-index: 10;
+	}
+
+	.sidebar h1 {
+		margin-top: 0;
+		color: #333;
+		font-size: 1.5rem;
+	}
+
+	.sidebar p {
+		color: #666;
+		line-height: 1.6;
+	}
+
+	.sidebar a {
+		color: #0066cc;
+		text-decoration: none;
+	}
+
+	.sidebar a:hover {
+		text-decoration: underline;
+	}
+
+	.canvas-container {
+		flex: 1;
+		position: relative;
 	}
 </style>
