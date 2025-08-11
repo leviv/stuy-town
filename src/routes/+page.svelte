@@ -9,7 +9,7 @@
 	import { Post } from '$lib/post.js';
 	import { Material } from '$lib/Material';
 	import { generateParams as generateEnvParams } from '$lib/envMap';
-	import { ArduinoController, type ArduinoData, type ArduinoStatus } from '$lib/arduino';
+	import { choosePort } from '$lib/arduino';
 	import GUI from 'lil-gui';
 
 	// Canvas element reference
@@ -25,9 +25,6 @@
 	let pitch = 0.0;
 	let roll = 0.0;
 	let arduinoModel: THREE.Object3D | null = null;
-
-	// Arduino controller
-	let arduino: ArduinoController;
 
 	onMount(() => {
 		scene = new THREE.Scene();
@@ -76,32 +73,15 @@
 		const arduinoFolder = gui.addFolder('Arduino Control');
 		arduinoFolder.open();
 
-		// Initialize Arduino controller
-		arduino = new ArduinoController(
-			(data: ArduinoData) => {
-				// Update orientation data when received
-				heading = data.heading;
-				pitch = data.pitch;
-				roll = data.roll;
-			},
-			(status: ArduinoStatus) => {
-				// Update GUI status
-				arduinoSettings.enabled = status.enabled;
-				arduinoSettings.status = status.status;
-			}
-		);
-
 		// Arduino connection control
 		const arduinoSettings = {
 			enabled: false,
 			status: 'Disconnected',
-			connect: () => arduino.connect(),
-			disconnect: () => arduino.disconnect()
+			connect: () => choosePort()
 		};
 		arduinoFolder.add(arduinoSettings, 'enabled').name('Arduino Control').listen();
 		arduinoFolder.add(arduinoSettings, 'status').name('Status').listen();
 		arduinoFolder.add(arduinoSettings, 'connect').name('Connect Arduino');
-		arduinoFolder.add(arduinoSettings, 'disconnect').name('Disconnect Arduino');
 
 		// Shaders
 		const post = new Post(renderer);
@@ -239,16 +219,16 @@
 
 		const render = () => {
 			// Apply Arduino rotation to the cube
-			if (arduino.connected) {
-				// Convert degrees to radians and apply to cube rotation
-				cube.rotation.x = THREE.MathUtils.degToRad(pitch);
-				cube.rotation.y = THREE.MathUtils.degToRad(heading);
-				cube.rotation.z = THREE.MathUtils.degToRad(roll);
-			} else {
-				// Default cube animation when Arduino is not connected
-				cube.rotation.x += 0.01;
-				cube.rotation.y += 0.01;
-			}
+			// if (arduino.connected) {
+			// 	// Convert degrees to radians and apply to cube rotation
+			// 	cube.rotation.x = THREE.MathUtils.degToRad(pitch);
+			// 	cube.rotation.y = THREE.MathUtils.degToRad(heading);
+			// 	cube.rotation.z = THREE.MathUtils.degToRad(roll);
+			// } else {
+			// Default cube animation when Arduino is not connected
+			cube.rotation.x += 0.01;
+			cube.rotation.y += 0.01;
+			// }
 
 			if (cameraSettings.autoFlight) {
 				// Camera flight path animation (60 second loop)
