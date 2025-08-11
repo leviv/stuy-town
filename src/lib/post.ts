@@ -23,7 +23,7 @@ import { Controller, GUI } from 'lil-gui';
 const normalMat = new MeshNormalMaterial({ side: DoubleSide });
 
 const loader = new TextureLoader();
-const noiseTexture = loader.load("/assets/noise1.png");
+const noiseTexture = loader.load("assets/noise1.png");
 noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping;
 
 const fragmentShader = `precision highp float;

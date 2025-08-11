@@ -26,7 +26,7 @@ async function getTexture(name: string) {
   if (!papers[name].promise) {
     papers[name].promise = new Promise((resolve, reject) => {
       loader.load(
-        `/assets/${papers[name].file}`,
+        `assets/${papers[name].file}`,
         (res) => {
           res.wrapS = res.wrapT = RepeatWrapping;
           papers[name].texture = res;
