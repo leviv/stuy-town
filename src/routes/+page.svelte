@@ -303,8 +303,9 @@
 
 <div class="app-container">
 	<div class="canvas-container" bind:this={canvasContainer}></div>
+	<h1>Stuytown</h1>
 	<div class="content-overlay">
-		<h1>Welcome to Stuytown</h1>
+		<h2>Welcome to Stuytown</h2>
 		<p>I swear I've done a lot of research I'm just working on writing it.</p>
 	</div>
 </div>
@@ -327,6 +328,21 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
+	}
+
+	h1 {
+		font-family: serif;
+		font-size: 50px;
+		position: absolute;
+		top: 20px;
+		left: 20px;
+		color: rgba(0, 0, 0, 0.821);
+		margin: 0;
+		background: url('assets/Craft_Light.jpg') no-repeat center center;
+
+		/* Clip the background to the text shape */
+		-webkit-background-clip: text; /* For WebKit browsers (Chrome, Safari) */
+		background-clip: text;
 	}
 
 	.content-overlay {
