@@ -9,7 +9,7 @@
 	import { Post } from '$lib/post.js';
 	import { Material } from '$lib/Material';
 	import { generateParams as generateEnvParams } from '$lib/envMap';
-	import { choosePort } from '$lib/arduino';
+	import { choosePort, getOrientation } from '$lib/arduino';
 	import GUI from 'lil-gui';
 
 	// Canvas element reference
@@ -21,9 +21,6 @@
 	const bgColor = 0xffffff;
 
 	// Arduino orientation variables
-	let heading = 0.0;
-	let pitch = 0.0;
-	let roll = 0.0;
 	let arduinoModel: THREE.Object3D | null = null;
 
 	onMount(() => {
@@ -77,7 +74,11 @@
 		const arduinoSettings = {
 			enabled: false,
 			status: 'Disconnected',
-			connect: () => choosePort()
+			connect: async () => {
+				await choosePort();
+				arduinoSettings.enabled = true;
+				arduinoSettings.status = 'Connected';
+			}
 		};
 		arduinoFolder.add(arduinoSettings, 'enabled').name('Arduino Control').listen();
 		arduinoFolder.add(arduinoSettings, 'status').name('Status').listen();
@@ -169,17 +170,12 @@
 			post.setSize(canvasWidth, canvasHeight);
 		});
 
-		const geometry = new THREE.BoxGeometry();
-		const cube = new THREE.Mesh(geometry, material);
-		scene.add(cube);
-
 		// Load GLTF
 		const loader = new GLTFLoader();
 		loader.load(
 			'stuy-town.gltf',
 			(gltf: { scene: THREE.Object3D<THREE.Object3DEventMap> }) => {
 				const model = gltf.scene;
-				arduinoModel = model; // Store reference for Arduino control
 
 				gltf.scene.traverse((child) => {
 					if ((child as THREE.Mesh).isMesh) {
@@ -199,14 +195,22 @@
 				// Center the model and place bottom on ground
 				const box = new THREE.Box3().setFromObject(model);
 				const center = box.getCenter(new THREE.Vector3());
-				const size = box.getSize(new THREE.Vector3());
+
+				// Create a wrapper group to handle the transform origin properly
+				const modelWrapper = new THREE.Group();
 
 				// Move model so its center is at origin horizontally, but bottom is at y=0
 				model.position.x = -center.x;
 				model.position.z = -center.z;
 				model.position.y = -box.min.y; // Move up so bottom is at y=0
 
-				scene.add(model);
+				// Add the model to the wrapper
+				modelWrapper.add(model);
+
+				// Store the wrapper as the arduino model for rotation control
+				arduinoModel = modelWrapper;
+
+				scene.add(modelWrapper);
 				console.log('Model lodaded');
 			},
 			(xhr: { loaded: number; total: number }) => {
@@ -218,17 +222,18 @@
 		);
 
 		const render = () => {
-			// Apply Arduino rotation to the cube
-			// if (arduino.connected) {
-			// 	// Convert degrees to radians and apply to cube rotation
-			// 	cube.rotation.x = THREE.MathUtils.degToRad(pitch);
-			// 	cube.rotation.y = THREE.MathUtils.degToRad(heading);
-			// 	cube.rotation.z = THREE.MathUtils.degToRad(roll);
-			// } else {
-			// Default cube animation when Arduino is not connected
-			cube.rotation.x += 0.01;
-			cube.rotation.y += 0.01;
-			// }
+			// Apply Arduino rotation to the model
+			const orientation = getOrientation();
+			if (
+				arduinoModel &&
+				arduinoSettings.enabled &&
+				(orientation.heading !== 0 || orientation.pitch !== 0 || orientation.roll !== 0)
+			) {
+				// Convert degrees to radians and apply to model rotation
+				arduinoModel.rotation.x = THREE.MathUtils.degToRad(orientation.pitch);
+				arduinoModel.rotation.y = THREE.MathUtils.degToRad(orientation.heading);
+				arduinoModel.rotation.z = THREE.MathUtils.degToRad(orientation.roll);
+			}
 
 			if (cameraSettings.autoFlight) {
 				// Camera flight path animation (60 second loop)

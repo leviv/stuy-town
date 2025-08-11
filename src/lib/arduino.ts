@@ -2,6 +2,23 @@ let heading: number = 0;
 let pitch: number = 0;
 let roll: number = 0;
 
+// Export functions to access the orientation data
+export function getOrientation() {
+  return { heading, pitch, roll };
+}
+
+export function getHeading() {
+  return heading;
+}
+
+export function getPitch() {
+  return pitch;
+}
+
+export function getRoll() {
+  return roll;
+}
+
 let port: SerialPort | null = null;
 let reader: ReadableStreamDefaultReader<string> | null = null;
 let writer: WritableStreamDefaultWriter<string> | null = null;
