@@ -26,8 +26,7 @@
 	onMount(() => {
 		scene = new THREE.Scene();
 
-		// Calculate canvas dimensions (window width minus sidebar width)
-		const canvasWidth = window.innerWidth - 400;
+		const canvasWidth = window.innerWidth;
 		const canvasHeight = window.innerHeight;
 
 		// Camera
@@ -160,7 +159,7 @@
 
 		// Resize the canvas and update camera aspect ratio on window resize
 		window.addEventListener('resize', () => {
-			const canvasWidth = window.innerWidth - 400;
+			const canvasWidth = window.innerWidth;
 			const canvasHeight = window.innerHeight;
 
 			renderer.setSize(canvasWidth, canvasHeight);
@@ -303,13 +302,11 @@
 </script>
 
 <div class="app-container">
-	<div class="sidebar">
-		<h1>Welcome to SvelteKit</h1>
-		<p>
-			Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
-		</p>
-	</div>
 	<div class="canvas-container" bind:this={canvasContainer}></div>
+	<div class="content-overlay">
+		<h1>Welcome to Stuytown</h1>
+		<p>I swear I've done a lot of research I'm just working on writing it.</p>
+	</div>
 </div>
 
 <style>
@@ -319,42 +316,51 @@
 	}
 
 	.app-container {
-		display: flex;
+		position: relative;
 		width: 100vw;
 		height: 100vh;
 	}
 
-	.sidebar {
-		width: 400px;
-		background-color: #f5f5f5;
-		padding: 20px;
-		box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-		overflow-y: auto;
-		z-index: 10;
+	.canvas-container {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
 	}
 
-	.sidebar h1 {
+	.content-overlay {
+		position: absolute;
+		bottom: 20px;
+		left: 20px;
+		background-color: rgba(245, 245, 245, 0.9);
+		padding: 20px;
+		border-radius: 8px;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+		max-width: 300px;
+		z-index: 10;
+		backdrop-filter: blur(5px);
+	}
+
+	.content-overlay h1 {
 		margin-top: 0;
+		margin-bottom: 10px;
 		color: #333;
 		font-size: 1.5rem;
 	}
 
-	.sidebar p {
+	.content-overlay p {
+		margin-bottom: 0;
 		color: #666;
 		line-height: 1.6;
 	}
 
-	.sidebar a {
+	.content-overlay a {
 		color: #0066cc;
 		text-decoration: none;
 	}
 
-	.sidebar a:hover {
+	.content-overlay a:hover {
 		text-decoration: underline;
-	}
-
-	.canvas-container {
-		flex: 1;
-		position: relative;
 	}
 </style>

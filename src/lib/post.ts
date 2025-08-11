@@ -287,10 +287,7 @@ class Post {
       fragmentShader,
     });
     this.renderPass = new ShaderPass(renderer, shader);
-    console.log("inkColor:", this.params.inkColor);
   }
-
-  
 
   setSize(w: number, h: number) {
     this.normalFBO.setSize(w, h);
@@ -312,6 +309,21 @@ class Post {
 
   generateParams(gui: GUI) {
     const controllers: Record<string, Controller> = {};
+    
+    // Create GUI-friendly color objects (0-1 range) separate from Three.js colors
+    const guiColors = {
+      inkColor: { 
+        r: this.params.inkColor!.r, 
+        g: this.params.inkColor!.g, 
+        b: this.params.inkColor!.b 
+      },
+      edgeColor: { 
+        r: this.params.edgeColor!.r, 
+        g: this.params.edgeColor!.g, 
+        b: this.params.edgeColor!.b 
+      }
+    };
+    
     controllers["scale"] = gui
       .add(this.params, "scale", 0.1, 2)
       .onChange(async (v: number) => {
@@ -358,17 +370,17 @@ class Post {
         this.renderPass.shader.uniforms.contour.value = v;
       });
     controllers["inkColor"] = gui
-      .addColor(this.params, "inkColor")
+      .addColor(guiColors, "inkColor")
       .onChange(async (v: { r: number; g: number; b: number }) => {
-        console.log("inkColor change:", v);
-        // lil-gui provides RGB values in 0-1 range, convert to 0-255 range
+        // Update the Three.js color object (which expects 0-255 range in shader)
+        this.params.inkColor!.setRGB(v.r, v.g, v.b);
         this.renderPass.shader.uniforms.inkColor.value.setRGB(v.r * 255, v.g * 255, v.b * 255);
       });
     controllers["edgeColor"] = gui
-      .addColor(this.params, "edgeColor")
+      .addColor(guiColors, "edgeColor")
       .onChange(async (v: { r: number; g: number; b: number }) => {
-        console.log("edgeColor change:", v);
-        // lil-gui provides RGB values in 0-1 range, convert to 0-255 range
+        // Update the Three.js color object (which expects 0-255 range in shader)
+        this.params.edgeColor!.setRGB(v.r, v.g, v.b);
         this.renderPass.shader.uniforms.edgeColor.value.setRGB(v.r * 255, v.g * 255, v.b * 255);
       });
     controllers["paper"] = generatePaperParams(gui, this.renderPass.shader);
