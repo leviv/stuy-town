@@ -11,6 +11,7 @@
 	import { generateParams as generateEnvParams } from '$lib/envMap';
 	import { choosePort, getOrientation } from '$lib/arduino';
 	import LiquidGlass from '$lib/LiquidGlass.svelte';
+	import AllContent from '$lib/AllContent.svelte';
 	import GUI from 'lil-gui';
 
 	// Canvas element reference
@@ -24,52 +25,29 @@
 	// Arduino orientation variables
 	let arduinoModel: THREE.Object3D | null = null;
 
+	// Smooth Arduino rotation tracking
+	let targetRotation = { x: 0, y: 0, z: 0 };
+	let currentRotation = { x: 0, y: 0, z: 0 };
+	let lastSignificantRotation = { x: 0, y: 0, z: 0 };
+
 	// Content navigation variables
 	let contentContainer: HTMLDivElement;
 	let currentSubtitle = 'Introduction';
 	let currentParagraphIndex = 0;
 
-	// Content sections data
+	// Content sections data - now just metadata for navigation
 	const contentSections = [
-		{
-			title: 'Introduction',
-			paragraphs: [
-				'Stuyvesant Town, commonly known as Stuy Town, is a large post-World War II private residential development on the east side of Manhattan.',
-				'Built by the Metropolitan Life Insurance Company, it was one of the first racially integrated housing developments in the United States.',
-				'The complex consists of 110 red brick buildings containing 11,250 apartments on 80 acres.'
-			]
-		},
-		{
-			title: 'History',
-			paragraphs: [
-				'Construction began in 1943 and was completed in 1947, designed by the architectural firms of Gilmore D. Clarke and Robert Allan Jacobs.',
-				'The development was originally intended to provide affordable housing for returning World War II veterans and their families.',
-				'Metropolitan Life invested $90 million in the project, making it one of the largest private housing developments of its time.'
-			]
-		},
-		{
-			title: 'Architecture',
-			paragraphs: [
-				'The buildings are arranged in a park-like setting with landscaped courtyards and playgrounds throughout the complex.',
-				'Each building is 13 stories high and features the distinctive red brick facade that has become synonymous with post-war housing.',
-				'The design emphasizes community living with shared spaces and recreational facilities integrated throughout the development.'
-			]
-		},
-		{
-			title: 'Community',
-			paragraphs: [
-				'Today, Stuy Town houses approximately 30,000 residents, making it one of the largest residential complexes in Manhattan.',
-				'The community features multiple playgrounds, a recreation center, and extensive green spaces rare in Manhattan.',
-				'Despite urban development pressures, the complex maintains its original character and continues to serve as affordable housing.'
-			]
-		}
+		{ title: 'Introduction', count: 3 },
+		{ title: 'History', count: 3 },
+		{ title: 'Architecture', count: 3 },
+		{ title: 'Community', count: 3 }
 	];
 
-	// Flatten all paragraphs with section info
-	const allParagraphs = contentSections.flatMap((section) =>
-		section.paragraphs.map((paragraph) => ({
-			text: paragraph,
-			sectionTitle: section.title
+	// Create navigation array
+	const allCards = contentSections.flatMap((section, sectionIndex) =>
+		Array.from({ length: section.count }, (_, cardIndex) => ({
+			sectionTitle: section.title,
+			cardIndex: sectionIndex * 3 + cardIndex
 		}))
 	);
 
@@ -80,7 +58,7 @@
 		if (event.key === 'ArrowUp' && currentParagraphIndex > 0) {
 			currentParagraphIndex--;
 			updateCurrentSubtitle();
-		} else if (event.key === 'ArrowDown' && currentParagraphIndex < allParagraphs.length - 1) {
+		} else if (event.key === 'ArrowDown' && currentParagraphIndex < allCards.length - 1) {
 			currentParagraphIndex++;
 			updateCurrentSubtitle();
 		}
@@ -88,14 +66,9 @@
 
 	// Update subtitle based on current paragraph
 	function updateCurrentSubtitle() {
-		if (currentParagraphIndex >= 0 && currentParagraphIndex < allParagraphs.length) {
-			currentSubtitle = allParagraphs[currentParagraphIndex].sectionTitle;
+		if (currentParagraphIndex >= 0 && currentParagraphIndex < allCards.length) {
+			currentSubtitle = allCards[currentParagraphIndex].sectionTitle;
 		}
-	}
-
-	// Handle scroll and update subtitle (keeping for compatibility but simplified)
-	function handleScroll() {
-		// Keep this function for any future scroll-based interactions
 	}
 
 	onMount(() => {
@@ -293,17 +266,47 @@
 		);
 
 		const render = () => {
-			// Apply Arduino rotation to the model
+			// Apply Arduino rotation to the model with smooth interpolation
 			const orientation = getOrientation();
 			if (
 				arduinoModel &&
 				arduinoSettings.enabled &&
 				(orientation.heading !== 0 || orientation.pitch !== 0 || orientation.roll !== 0)
 			) {
-				// Convert degrees to radians and apply to model rotation
-				arduinoModel.rotation.x = THREE.MathUtils.degToRad(orientation.pitch);
-				arduinoModel.rotation.y = THREE.MathUtils.degToRad(orientation.heading);
-				arduinoModel.rotation.z = THREE.MathUtils.degToRad(orientation.roll);
+				// Movement threshold - need at least 5 degrees of movement to update target
+				const movementThreshold = 5.0;
+
+				// Check if there's significant movement from last recorded position
+				const pitchDiff = Math.abs(orientation.pitch - lastSignificantRotation.x);
+				const headingDiff = Math.abs(orientation.heading - lastSignificantRotation.y);
+				const rollDiff = Math.abs(orientation.roll - lastSignificantRotation.z);
+
+				// If movement is significant enough, update target rotation
+				if (
+					pitchDiff > movementThreshold ||
+					headingDiff > movementThreshold ||
+					rollDiff > movementThreshold
+				) {
+					targetRotation.x = orientation.pitch;
+					targetRotation.y = orientation.heading;
+					targetRotation.z = orientation.roll;
+
+					// Update last significant rotation
+					lastSignificantRotation.x = orientation.pitch;
+					lastSignificantRotation.y = orientation.heading;
+					lastSignificantRotation.z = orientation.roll;
+				}
+
+				// Smoothly interpolate current rotation towards target (lerp factor controls smoothness)
+				const lerpFactor = 0.05; // Lower = smoother, higher = more responsive
+				currentRotation.x += (targetRotation.x - currentRotation.x) * lerpFactor;
+				currentRotation.y += (targetRotation.y - currentRotation.y) * lerpFactor;
+				currentRotation.z += (targetRotation.z - currentRotation.z) * lerpFactor;
+
+				// Apply smooth rotation to model
+				arduinoModel.rotation.x = THREE.MathUtils.degToRad(currentRotation.x);
+				arduinoModel.rotation.y = THREE.MathUtils.degToRad(currentRotation.y);
+				arduinoModel.rotation.z = THREE.MathUtils.degToRad(currentRotation.z);
 			}
 
 			if (cameraSettings.autoFlight) {
@@ -311,23 +314,35 @@
 				const time = (performance.now() * 0.001) % 60; // 60 second loop
 				const t = time / 60; // Normalize to 0-1
 
+				// Scale factor for camera distance when Arduino is connected
+				const zoomScale = arduinoSettings.enabled ? 2.5 : 1.0; // Zoom out by 2.5x when Arduino connected
+
 				// Define waypoints for camera path (adjust these based on your building layout)
-				const cameraPath = new THREE.CatmullRomCurve3(
-					[
-						new THREE.Vector3(15, 8, 15), // Start position - wide perspective from corner
-						new THREE.Vector3(12, 6, 8), // Moving closer but still wide
-						new THREE.Vector3(5, 3, 6), // Medium distance view
-						new THREE.Vector3(-3, 2, 4), // Between buildings (low)
-						new THREE.Vector3(-10, 7, -5), // Far back, elevated view
-						new THREE.Vector3(-8, 10, -12), // High wide view from behind
-						new THREE.Vector3(2, 8, -15), // Far side view, elevated
-						new THREE.Vector3(10, 6, -10), // Wide angle from other side
-						new THREE.Vector3(18, 5, -2), // Very wide perspective
-						new THREE.Vector3(16, 7, 8), // Coming back around wide
-						new THREE.Vector3(15, 8, 15) // Back to start (smooth loop)
-					],
-					true
-				); // true = closed loop
+				const baseCameraPoints = [
+					new THREE.Vector3(15, 8, 15), // Start position - wide perspective from corner
+					new THREE.Vector3(12, 6, 8), // Moving closer but still wide
+					new THREE.Vector3(5, 3, 6), // Medium distance view
+					new THREE.Vector3(-3, 2, 4), // Between buildings (low)
+					new THREE.Vector3(-10, 7, -5), // Far back, elevated view
+					new THREE.Vector3(-8, 10, -12), // High wide view from behind
+					new THREE.Vector3(2, 8, -15), // Far side view, elevated
+					new THREE.Vector3(10, 6, -10), // Wide angle from other side
+					new THREE.Vector3(18, 5, -2), // Very wide perspective
+					new THREE.Vector3(16, 7, 8), // Coming back around wide
+					new THREE.Vector3(15, 8, 15) // Back to start (smooth loop)
+				];
+
+				// Scale camera points based on Arduino connection
+				const scaledCameraPoints = baseCameraPoints.map(
+					(point) =>
+						new THREE.Vector3(
+							point.x * zoomScale,
+							point.y * Math.max(1.2, zoomScale * 0.8), // Keep some elevation variation
+							point.z * zoomScale
+						)
+				);
+
+				const cameraPath = new THREE.CatmullRomCurve3(scaledCameraPoints, true); // true = closed loop
 
 				// Define look-at targets (what the camera should focus on)
 				const lookAtPath = new THREE.CatmullRomCurve3(
@@ -400,11 +415,11 @@
 		<h2>{currentSubtitle}</h2>
 	</div>
 	<div class="content-container" bind:this={contentContainer}>
-		{#if allParagraphs[currentParagraphIndex]}
+		{#if allCards[currentParagraphIndex]}
 			<div class="paragraph">
 				<LiquidGlass opacity={1} />
 				<div class="paragraph-content">
-					<p>{allParagraphs[currentParagraphIndex].text}</p>
+					<AllContent cardIndex={currentParagraphIndex} />
 				</div>
 			</div>
 		{/if}
@@ -412,7 +427,7 @@
 		<!-- Navigation hint -->
 		<div class="navigation-hint">
 			<p>Use ↑↓ arrow keys to navigate</p>
-			<p>{currentParagraphIndex + 1} / {allParagraphs.length}</p>
+			<p>{currentParagraphIndex + 1} / {allCards.length}</p>
 		</div>
 	</div>
 </div>
@@ -481,7 +496,7 @@
 		max-height: 60vh;
 		z-index: 10;
 		overflow: visible;
-		padding: 20px 0;
+		padding: 20px 0 0 0;
 	}
 
 	.paragraph {
@@ -520,13 +535,5 @@
 		background-color: rgba(255, 255, 255, 0.05);
 		border-radius: 8px;
 		border: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.paragraph p {
-		margin: 0;
-		color: #222;
-		text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-		line-height: 1.6;
-		font-size: 14px;
 	}
 </style>
