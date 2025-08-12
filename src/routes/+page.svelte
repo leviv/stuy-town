@@ -426,8 +426,11 @@
 
 		<!-- Navigation hint -->
 		<div class="navigation-hint">
-			<p>Use ↑↓ arrow keys to navigate</p>
-			<p>{currentParagraphIndex + 1} / {allCards.length}</p>
+			<LiquidGlass opacity={1} />
+			<div class="navigation-content">
+				<p>Use ↑↓ arrow keys to navigate</p>
+				<p>{currentParagraphIndex + 1} / {allCards.length}</p>
+			</div>
 		</div>
 	</div>
 </div>
@@ -516,12 +519,13 @@
 
 	.navigation-hint {
 		margin-top: 10px;
-		padding: 10px;
-		background-color: rgba(255, 255, 255, 0.2);
 		color: black;
-		border-radius: 4px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		backdrop-filter: blur(5px);
+		border-radius: 8px;
+		overflow: hidden;
+		z-index: 2;
+		opacity: 1;
+		transform: translateY(0);
+		transition: all 0.3s ease;
 	}
 
 	.navigation-hint p {
@@ -531,6 +535,15 @@
 	}
 
 	.paragraph-content {
+		position: relative;
+		z-index: 3;
+		padding: 20px;
+		background-color: rgba(255, 255, 255, 0.05);
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.navigation-content {
 		position: relative;
 		z-index: 3;
 		padding: 20px;
