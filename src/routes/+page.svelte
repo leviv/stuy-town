@@ -458,8 +458,10 @@
 	.headers {
 		position: absolute;
 		top: 20px;
-		left: 20px;
+		left: calc(50% - 300px);
 		z-index: 15;
+		text-align: center;
+		width: 600px;
 	}
 
 	h1 {
@@ -491,7 +493,7 @@
 	.content-container {
 		position: absolute;
 		bottom: 20px;
-		left: 20px;
+		left: calc(50% - 300px);
 		width: 600px;
 		max-height: 60vh;
 		z-index: 10;
