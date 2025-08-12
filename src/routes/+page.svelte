@@ -384,13 +384,22 @@
 	});
 </script>
 
+<svelte:head>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Modak&display=swap"
+		rel="stylesheet"
+	/>
+</svelte:head>
+
 <div class="app-container">
 	<div class="canvas-container" bind:this={canvasContainer}></div>
 	<div class="headers">
 		<h1>Stuytown</h1>
 		<h2>{currentSubtitle}</h2>
 	</div>
-	<div class="content-overlay" bind:this={contentContainer}>
+	<div class="content-container" bind:this={contentContainer}>
 		{#if allParagraphs[currentParagraphIndex]}
 			<div class="paragraph">
 				<LiquidGlass opacity={1} />
@@ -412,6 +421,9 @@
 	:global(body) {
 		margin: 0;
 		overflow: hidden; /* Prevent scrollbars */
+		font-family: 'Fira Sans', sans-serif;
+		font-weight: 400;
+		font-style: normal;
 	}
 
 	.app-container {
@@ -433,28 +445,35 @@
 		top: 20px;
 		left: 20px;
 		z-index: 15;
-		pointer-events: none;
 	}
 
 	h1 {
-		font-family: serif;
-		font-size: 50px;
-		color: rgba(0, 0, 0, 0.821);
+		font-family: 'Modak', system-ui;
+		font-weight: 400;
+		line-height: 40px;
+		font-style: normal;
+		letter-spacing: 8px;
+		font-size: 55px;
+		color: #2e58ff;
+		-webkit-text-stroke: 2px black;
 		margin: 0;
 		background: url('assets/Craft_Light.jpg') no-repeat center center;
 		-webkit-background-clip: text;
 		background-clip: text;
+		margin: 0px;
 	}
 
 	h2 {
-		font-family: serif;
-		font-size: 24px;
-		color: rgba(0, 0, 0, 0.7);
+		font-family: 'Modak', system-ui;
+		letter-spacing: -1px;
+		font-size: 35px;
+		-webkit-text-stroke: 2px black;
+		color: #fff;
 		margin: 5px 0 0 0;
 		transition: all 0.3s ease;
 	}
 
-	.content-overlay {
+	.content-container {
 		position: absolute;
 		bottom: 20px;
 		left: 20px;
