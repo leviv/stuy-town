@@ -10,6 +10,7 @@
 	import { Material } from '$lib/Material';
 	import { generateParams as generateEnvParams } from '$lib/envMap';
 	import { choosePort, getOrientation } from '$lib/arduino';
+	import LiquidGlass from '$lib/LiquidGlass.svelte';
 	import GUI from 'lil-gui';
 
 	// Canvas element reference
@@ -22,6 +23,80 @@
 
 	// Arduino orientation variables
 	let arduinoModel: THREE.Object3D | null = null;
+
+	// Content navigation variables
+	let contentContainer: HTMLDivElement;
+	let currentSubtitle = 'Introduction';
+	let currentParagraphIndex = 0;
+
+	// Content sections data
+	const contentSections = [
+		{
+			title: 'Introduction',
+			paragraphs: [
+				'Stuyvesant Town, commonly known as Stuy Town, is a large post-World War II private residential development on the east side of Manhattan.',
+				'Built by the Metropolitan Life Insurance Company, it was one of the first racially integrated housing developments in the United States.',
+				'The complex consists of 110 red brick buildings containing 11,250 apartments on 80 acres.'
+			]
+		},
+		{
+			title: 'History',
+			paragraphs: [
+				'Construction began in 1943 and was completed in 1947, designed by the architectural firms of Gilmore D. Clarke and Robert Allan Jacobs.',
+				'The development was originally intended to provide affordable housing for returning World War II veterans and their families.',
+				'Metropolitan Life invested $90 million in the project, making it one of the largest private housing developments of its time.'
+			]
+		},
+		{
+			title: 'Architecture',
+			paragraphs: [
+				'The buildings are arranged in a park-like setting with landscaped courtyards and playgrounds throughout the complex.',
+				'Each building is 13 stories high and features the distinctive red brick facade that has become synonymous with post-war housing.',
+				'The design emphasizes community living with shared spaces and recreational facilities integrated throughout the development.'
+			]
+		},
+		{
+			title: 'Community',
+			paragraphs: [
+				'Today, Stuy Town houses approximately 30,000 residents, making it one of the largest residential complexes in Manhattan.',
+				'The community features multiple playgrounds, a recreation center, and extensive green spaces rare in Manhattan.',
+				'Despite urban development pressures, the complex maintains its original character and continues to serve as affordable housing.'
+			]
+		}
+	];
+
+	// Flatten all paragraphs with section info
+	const allParagraphs = contentSections.flatMap((section) =>
+		section.paragraphs.map((paragraph) => ({
+			text: paragraph,
+			sectionTitle: section.title
+		}))
+	);
+
+	let scrollY = 0;
+
+	// Handle keyboard navigation
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'ArrowUp' && currentParagraphIndex > 0) {
+			currentParagraphIndex--;
+			updateCurrentSubtitle();
+		} else if (event.key === 'ArrowDown' && currentParagraphIndex < allParagraphs.length - 1) {
+			currentParagraphIndex++;
+			updateCurrentSubtitle();
+		}
+	}
+
+	// Update subtitle based on current paragraph
+	function updateCurrentSubtitle() {
+		if (currentParagraphIndex >= 0 && currentParagraphIndex < allParagraphs.length) {
+			currentSubtitle = allParagraphs[currentParagraphIndex].sectionTitle;
+		}
+	}
+
+	// Handle scroll and update subtitle (keeping for compatibility but simplified)
+	function handleScroll() {
+		// Keep this function for any future scroll-based interactions
+	}
 
 	onMount(() => {
 		scene = new THREE.Scene();
@@ -37,7 +112,7 @@
 		renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			alpha: true,
-			preserveDrawingBuffer: false,
+			preserveDrawingBuffer: true,
 			powerPreference: 'high-performance'
 		});
 		renderer.setPixelRatio(window.devicePixelRatio);
@@ -50,16 +125,14 @@
 
 		// Debug GUI
 		const gui = new GUI();
+		gui.close();
 		const materialFolder = gui.addFolder('Material');
-		materialFolder.open();
 
 		// Lighting controls folder
 		const lightingFolder = gui.addFolder('Lighting');
-		lightingFolder.open();
 
 		// Camera controls folder
 		const cameraFolder = gui.addFolder('Camera');
-		cameraFolder.open();
 
 		// Camera flight control
 		const cameraSettings = { autoFlight: true };
@@ -67,7 +140,6 @@
 
 		// Arduino controls folder
 		const arduinoFolder = gui.addFolder('Arduino Control');
-		arduinoFolder.open();
 
 		// Arduino connection control
 		const arduinoSettings = {
@@ -114,7 +186,7 @@
 		};
 
 		const postController = post.generateParams(materialFolder);
-		postController['paper'].setValue('Craft rough');
+		postController['paper'].setValue('Watercolor cold press');
 		const envMapController = generateEnvParams(materialFolder, material);
 		envMapController.setValue('bridge');
 
@@ -298,15 +370,41 @@
 		};
 
 		render();
+
+		// Add keyboard event listener
+		window.addEventListener('keydown', handleKeydown);
+
+		// Initialize subtitle
+		updateCurrentSubtitle();
+
+		// Cleanup function
+		return () => {
+			window.removeEventListener('keydown', handleKeydown);
+		};
 	});
 </script>
 
 <div class="app-container">
 	<div class="canvas-container" bind:this={canvasContainer}></div>
-	<h1>Stuytown</h1>
-	<div class="content-overlay">
-		<h2>Welcome to Stuytown</h2>
-		<p>I swear I've done a lot of research I'm just working on writing it.</p>
+	<div class="headers">
+		<h1>Stuytown</h1>
+		<h2>{currentSubtitle}</h2>
+	</div>
+	<div class="content-overlay" bind:this={contentContainer}>
+		{#if allParagraphs[currentParagraphIndex]}
+			<div class="paragraph">
+				<LiquidGlass opacity={1} />
+				<div class="paragraph-content">
+					<p>{allParagraphs[currentParagraphIndex].text}</p>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Navigation hint -->
+		<div class="navigation-hint">
+			<p>Use ↑↓ arrow keys to navigate</p>
+			<p>{currentParagraphIndex + 1} / {allParagraphs.length}</p>
+		</div>
 	</div>
 </div>
 
@@ -330,53 +428,86 @@
 		height: 100%;
 	}
 
-	h1 {
-		font-family: serif;
-		font-size: 50px;
+	.headers {
 		position: absolute;
 		top: 20px;
 		left: 20px;
+		z-index: 15;
+		pointer-events: none;
+	}
+
+	h1 {
+		font-family: serif;
+		font-size: 50px;
 		color: rgba(0, 0, 0, 0.821);
 		margin: 0;
 		background: url('assets/Craft_Light.jpg') no-repeat center center;
-
-		/* Clip the background to the text shape */
-		-webkit-background-clip: text; /* For WebKit browsers (Chrome, Safari) */
+		-webkit-background-clip: text;
 		background-clip: text;
+	}
+
+	h2 {
+		font-family: serif;
+		font-size: 24px;
+		color: rgba(0, 0, 0, 0.7);
+		margin: 5px 0 0 0;
+		transition: all 0.3s ease;
 	}
 
 	.content-overlay {
 		position: absolute;
 		bottom: 20px;
 		left: 20px;
-		background-color: rgba(245, 245, 245, 0.9);
-		padding: 20px;
-		border-radius: 8px;
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-		max-width: 300px;
+		width: 600px;
+		max-height: 60vh;
 		z-index: 10;
+		overflow: visible;
+		padding: 20px 0;
+	}
+
+	.paragraph {
+		position: relative;
+		margin: 0 0 20px 0;
+		padding: 0;
+		min-height: 80px;
+		border-radius: 8px;
+		overflow: hidden;
+		z-index: 2;
+		opacity: 1;
+		transform: translateY(0);
+		transition: all 0.3s ease;
+	}
+
+	.navigation-hint {
+		margin-top: 10px;
+		padding: 10px;
+		background-color: rgba(255, 255, 255, 0.2);
+		color: black;
+		border-radius: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
 		backdrop-filter: blur(5px);
 	}
 
-	.content-overlay h1 {
-		margin-top: 0;
-		margin-bottom: 10px;
-		color: #333;
-		font-size: 1.5rem;
+	.navigation-hint p {
+		margin: 2px 0;
+		font-size: 12px;
+		text-align: center;
 	}
 
-	.content-overlay p {
-		margin-bottom: 0;
-		color: #666;
+	.paragraph-content {
+		position: relative;
+		z-index: 3;
+		padding: 20px;
+		background-color: rgba(255, 255, 255, 0.05);
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.paragraph p {
+		margin: 0;
+		color: #222;
+		text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 		line-height: 1.6;
-	}
-
-	.content-overlay a {
-		color: #0066cc;
-		text-decoration: none;
-	}
-
-	.content-overlay a:hover {
-		text-decoration: underline;
+		font-size: 14px;
 	}
 </style>

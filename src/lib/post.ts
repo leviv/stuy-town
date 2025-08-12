@@ -253,16 +253,16 @@ class Post {
     this.colorFBO = getFBO(1, 1);
     this.normalFBO = getFBO(1, 1);
     this.params = {
-      scale: 1.5,
-      noiseScale: 0.45,
+      scale: 2,
+      noiseScale: 0.1,
       angle: 2.7,
-      divergence: 1,
-      thickness: 0.8,
-      edgeThickness: .3,
-      contour: 2.2,
-      noisiness: 0.011,
+      divergence: .93,
+      thickness: 0.55,
+      edgeThickness: .05,
+      contour: 0,
+      noisiness: 0,
       edgeNoisiness: 0.01,
-      inkColor: new Color(68, 107, 147),
+      inkColor: new Color(46, 88, 255),
       edgeColor: new Color(0, 0, 0), // Black edges by default
     };
     const shader = new RawShaderMaterial({
