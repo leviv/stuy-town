@@ -115,7 +115,7 @@
 		margin: 10px 0;
 	}
 
-	.content-card :global(.legacy-box) {
+	.content-card :global(.citation) {
 		background: linear-gradient(45deg, rgba(46, 88, 255, 0.1), rgba(255, 255, 255, 0.1));
 		padding: 15px;
 		border-radius: 8px;

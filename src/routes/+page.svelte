@@ -28,10 +28,39 @@
 	// Arduino orientation variables
 	let arduinoModel: THREE.Object3D | null = null;
 
+	// Initial calibration offset - treat upside down as normal
+	let calibrationOffset = { x: 0, y: 0, z: 0 }; // Will be set when calibrating
+	let isCalibrated = false;
+
 	// Smooth Arduino rotation tracking
 	let targetRotation = { x: 0, y: 0, z: 0 };
 	let currentRotation = { x: 0, y: 0, z: 0 };
 	let lastSignificantRotation = { x: 0, y: 0, z: 0 };
+
+	// Helper function to handle angle wrapping for smooth interpolation
+	function interpolateAngle(current: number, target: number, factor: number): number {
+		// Calculate the difference between target and current
+		let diff = target - current;
+
+		// Handle wrapping - if difference is greater than 180, go the other way
+		if (diff > 180) {
+			diff -= 360;
+		} else if (diff < -180) {
+			diff += 360;
+		}
+
+		// Apply the interpolation to the difference
+		return current + diff * factor;
+	}
+
+	// Helper function to calculate the shortest angular distance between two angles
+	function angleDifference(angle1: number, angle2: number): number {
+		let diff = Math.abs(angle1 - angle2);
+		if (diff > 180) {
+			diff = 360 - diff;
+		}
+		return diff;
+	}
 
 	// Content navigation variables
 	let contentContainer: HTMLDivElement;
@@ -90,9 +119,9 @@
 	// Load the appropriate model based on currentParagraphIndex
 	let loadAppropriateModel: () => void;
 
-	// Function to load parkchester model (called from AllContent button)
-	function loadParkchester() {
-		showParkchester = true;
+	// Function to toggle between models (called from AllContent button)
+	function toggleParkchester() {
+		showParkchester = !showParkchester;
 		if (loadAppropriateModel) loadAppropriateModel();
 	}
 
@@ -147,6 +176,25 @@
 				await choosePort();
 				arduinoSettings.enabled = true;
 				arduinoSettings.status = 'Connected';
+
+				// Auto-calibrate after a short delay to let the orientation stabilize
+				setTimeout(() => {
+					const orientation = getOrientation();
+					calibrationOffset.x = orientation.pitch;
+					calibrationOffset.y = orientation.heading;
+					calibrationOffset.z = orientation.roll;
+					isCalibrated = true;
+					console.log('Arduino auto-calibrated with offset:', calibrationOffset);
+				}, 1000); // 1 second delay
+			},
+			calibrate: () => {
+				// Capture current orientation as the "zero" position
+				const orientation = getOrientation();
+				calibrationOffset.x = orientation.pitch;
+				calibrationOffset.y = orientation.heading;
+				calibrationOffset.z = orientation.roll;
+				isCalibrated = true;
+				console.log('Arduino manually calibrated with offset:', calibrationOffset);
 			}
 		};
 		arduinoFolder.add(arduinoSettings, 'enabled').name('Arduino Control').listen();
@@ -170,7 +218,7 @@
 		// Load the appropriate model based on currentParagraphIndex and showParkchester flag
 		loadAppropriateModel = function () {
 			const modelFile =
-				currentParagraphIndex === 2 && showParkchester
+				currentParagraphIndex === 3 && showParkchester
 					? 'parkchester-transformed.glb'
 					: 'stuy-town-transformed.glb';
 
@@ -210,7 +258,10 @@
 						}
 					});
 
-					model.scale.set(0.1, 0.1, 0.1); // Scale down the model
+					// Scale based on which model is being loaded
+					const isParkcheser = filename.includes('parkchester');
+					const scaleValue = isParkcheser ? 0.05 : 0.1; // Half scale for parkchester
+					model.scale.set(scaleValue, scaleValue, scaleValue);
 
 					// Center the model and place bottom on ground
 					const box = new THREE.Box3().setFromObject(model);
@@ -328,20 +379,42 @@
 		loadAppropriateModel();
 
 		const render = () => {
-			// Apply Arduino rotation to the model with smooth interpolation
+			// Apply Arduino rotation to the model with smooth interpolation and matrix transformation
 			const orientation = getOrientation();
 			if (
 				arduinoModel &&
 				arduinoSettings.enabled &&
+				isCalibrated &&
 				(orientation.heading !== 0 || orientation.pitch !== 0 || orientation.roll !== 0)
 			) {
+				// Log Arduino data for debugging
+				if (Math.random() < 0.01) {
+					// Log occasionally to avoid spam
+					console.log('Raw Arduino data:', orientation);
+					console.log('Calibration offset:', calibrationOffset);
+				}
+
+				// Apply calibration offset to normalize orientation
+				let adjustedPitch = orientation.pitch - calibrationOffset.x;
+				let adjustedHeading = orientation.heading - calibrationOffset.y;
+				let adjustedRoll = orientation.roll - calibrationOffset.z;
+
+				// Log adjusted values occasionally
+				if (Math.random() < 0.01) {
+					console.log('Adjusted orientation:', {
+						pitch: adjustedPitch,
+						heading: adjustedHeading,
+						roll: adjustedRoll
+					});
+				}
+
 				// Movement threshold - need at least 5 degrees of movement to update target
 				const movementThreshold = 5.0;
 
 				// Check if there's significant movement from last recorded position
-				const pitchDiff = Math.abs(orientation.pitch - lastSignificantRotation.x);
-				const headingDiff = Math.abs(orientation.heading - lastSignificantRotation.y);
-				const rollDiff = Math.abs(orientation.roll - lastSignificantRotation.z);
+				const pitchDiff = angleDifference(adjustedPitch, lastSignificantRotation.x);
+				const headingDiff = angleDifference(adjustedHeading, lastSignificantRotation.y);
+				const rollDiff = angleDifference(adjustedRoll, lastSignificantRotation.z);
 
 				// If movement is significant enough, update target rotation
 				if (
@@ -349,26 +422,59 @@
 					headingDiff > movementThreshold ||
 					rollDiff > movementThreshold
 				) {
-					targetRotation.x = orientation.pitch;
-					targetRotation.y = orientation.heading;
-					targetRotation.z = orientation.roll;
+					targetRotation.x = adjustedPitch;
+					targetRotation.y = adjustedHeading;
+					targetRotation.z = adjustedRoll;
 
 					// Update last significant rotation
-					lastSignificantRotation.x = orientation.pitch;
-					lastSignificantRotation.y = orientation.heading;
-					lastSignificantRotation.z = orientation.roll;
+					lastSignificantRotation.x = adjustedPitch;
+					lastSignificantRotation.y = adjustedHeading;
+					lastSignificantRotation.z = adjustedRoll;
 				}
 
 				// Smoothly interpolate current rotation towards target (lerp factor controls smoothness)
 				const lerpFactor = 0.05; // Lower = smoother, higher = more responsive
-				currentRotation.x += (targetRotation.x - currentRotation.x) * lerpFactor;
-				currentRotation.y += (targetRotation.y - currentRotation.y) * lerpFactor;
-				currentRotation.z += (targetRotation.z - currentRotation.z) * lerpFactor;
+				currentRotation.x = interpolateAngle(currentRotation.x, targetRotation.x, lerpFactor);
+				currentRotation.y = interpolateAngle(currentRotation.y, targetRotation.y, lerpFactor);
+				currentRotation.z = interpolateAngle(currentRotation.z, targetRotation.z, lerpFactor);
 
-				// Apply smooth rotation to model
-				arduinoModel.rotation.x = THREE.MathUtils.degToRad(currentRotation.x);
-				arduinoModel.rotation.y = THREE.MathUtils.degToRad(currentRotation.y);
-				arduinoModel.rotation.z = THREE.MathUtils.degToRad(currentRotation.z);
+				// Get the smoothed orientation values in radians
+				const roll = THREE.MathUtils.degToRad(currentRotation.z);
+				const pitch = THREE.MathUtils.degToRad(currentRotation.x);
+				const heading = THREE.MathUtils.degToRad(currentRotation.y);
+
+				// Calculate matrix components (from p5 sketch)
+				const c1 = Math.cos(roll);
+				const s1 = Math.sin(roll);
+				const c2 = Math.cos(pitch);
+				const s2 = Math.sin(pitch);
+				const c3 = Math.cos(heading);
+				const s3 = Math.sin(heading);
+
+				// Create rotation matrix using the p5 formula
+				const matrix = new THREE.Matrix4();
+				matrix.set(
+					c2 * c3,
+					s1 * s3 + c1 * c3 * s2,
+					c3 * s1 * s2 - c1 * s3,
+					0,
+					-s2,
+					c1 * c2,
+					c2 * s1,
+					0,
+					c2 * s3,
+					c1 * s2 * s3 - c3 * s1,
+					c1 * c3 + s1 * s2 * s3,
+					0,
+					0,
+					0,
+					0,
+					1
+				);
+
+				// Apply the matrix to the Arduino model
+				arduinoModel.matrix.copy(matrix);
+				arduinoModel.matrixAutoUpdate = false;
 			}
 
 			if (cameraSettings.autoFlight) {
@@ -474,7 +580,7 @@
 <div class="app-container">
 	<div class="canvas-container" bind:this={canvasContainer}></div>
 	<div class="headers">
-		<h1>Stuytown</h1>
+		<h1>{showParkchester ? 'Parkchester' : 'Stuytown'}</h1>
 		<h2>{currentSubtitle}</h2>
 	</div>
 	<div class="content-container" bind:this={contentContainer}>
@@ -482,7 +588,11 @@
 			<div class="paragraph">
 				<LiquidGlass opacity={1} />
 				<div class="paragraph-content">
-					<AllContent cardIndex={currentParagraphIndex} onLoadParkchester={loadParkchester} />
+					<AllContent
+						cardIndex={currentParagraphIndex}
+						onToggleParkchester={toggleParkchester}
+						{showParkchester}
+					/>
 				</div>
 			</div>
 		{/if}

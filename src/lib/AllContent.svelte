@@ -2,10 +2,10 @@
 	import ContentCard from './ContentCard.svelte';
 
 	export let cardIndex: number = 0;
-	export let onLoadParkchester: (() => void) | undefined = undefined;
+	export let onToggleParkchester: (() => void) | undefined = undefined;
+	export let showParkchester: boolean = false;
 </script>
 
-<!-- Card 0: Introduction Overview -->
 <div class="card {cardIndex === 0 ? 'active' : ''}">
 	<ContentCard title="Introduction Overview">
 		<p>
@@ -15,138 +15,125 @@
 	</ContentCard>
 </div>
 
-<!-- Card 1: Historical Integration -->
 <div class="card {cardIndex === 1 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
 			The massive housing complex was conceived as a project between two of the largest forces in
 			New York City in the mid twentieth century - Robert Moses and The Metropolitan Life Company
-			(MetLife).
+			(MetLife). Life insurance companies were flush with cash, and were looking for ways to
+			diversify their investments. At the same time, WWII had only made the housing crisis worse.
 		</p>
+		<p>
+			In the early 1900s, New York City was facing an extreme housing crisis. Mass migration after
+			WWI and the great depression had left resources strained, and led to crowded, unsanitary
+			tenements. In 1926, Governor Al Smith, convinced a reluctant legislature to pass the Limited
+			Dividend Housing Companies Law. This gave private developers twenty years of tax exemption in
+			return for limited rents and profits. Most projects built under the program were
+			union-sponsored, non-profit cooperatives. However, the program was unpopular, with private
+			developers unwilling to undertake the risk of construction for seemingly less lucrative
+			rent-stabilized units.
+		</p>
+		<div class="citation">
+			<a
+				href="https://www.jchs.harvard.edu/sites/default/files/tanaka_fiduciary_landlords_final_4-18-17_0.pdf"
+				target="_blank"
+			>
+				Fiduciary Landlords: Life Insurers and Large-Scale Housing in New York City by Adam Tanaka
+			</a>
+		</div>
 	</ContentCard>
 </div>
 
-<!-- Card 2: Complex Statistics -->
 <div class="card {cardIndex === 2 ? 'active' : ''}">
-	<ContentCard title="Complex Statistics">
+	<ContentCard title="Historical Integration">
 		<p>
-			The complex consists of <span class="highlight">110 red brick buildings</span> containing
-			<span class="highlight">11,250 apartments</span>
-			on <span class="highlight">80 acres</span>.
+			One private developer with a history of involvement in public health initiatives was
+			interested in the program, and In March 1922, Met Life executives succeeded in pressuring the
+			legislature to pass the so-called “Metropolitan Bill.” This enabled them, and all insurance
+			companies operating in New York State to invest up to ten percent of their assets in
+			residential development, with profits capped at six percent. This led to the creation of
+			Metropolitan Life apartments in Queens, but little other development. However, the coming
+			depression would change the pace of life insurance based development.
 		</p>
-		<ul>
-			<li>110 buildings total</li>
-			<li>11,250 individual apartments</li>
-			<li>80 acres of development</li>
-		</ul>
-		{#if onLoadParkchester}
-			<button on:click={onLoadParkchester} class="parkchester-button">
-				Compare with Parkchester
+		<img src="assets/met-life-apts-lic.png" alt="Metropolitan Life Apartments in LIC, Queens" />
+	</ContentCard>
+</div>
+
+<div class="card {cardIndex === 3 ? 'active' : ''}">
+	<ContentCard title="Historical Integration">
+		<p>
+			Concerned with a stagnating economy in the late 1930s, Met Life once again began pressuring
+			the government for advantageous legislation. And again they succeeded, allowing them to invest
+			up to 10% of their assets in rental housing, but this time with no limitations on rents or
+			dividends.
+		</p>
+		<p>
+			Work began nearly immediately on Parkchester, an "apartment colony" in the southern Bronx,
+			using what they had learned in Queens to construct a massive 12,271 apartment complex. This
+			former orphanage land became largest housing development in American history. The project was
+			a success, with tenants, city leads, and MetLife stockholders satisfied.
+		</p>
+		{#if onToggleParkchester}
+			<button on:click={onToggleParkchester} class="parkchester-button">
+				{showParkchester ? 'Back to Stuy Town' : 'Compare with Parkchester'}
 			</button>
 		{/if}
 	</ContentCard>
 </div>
 
-<!-- Card 3: Construction Timeline -->
-<div class="card {cardIndex === 3 ? 'active' : ''}">
-	<ContentCard title="Construction Timeline">
-		<p>
-			Construction began in <strong>1943</strong> and was completed in <strong>1947</strong>,
-			designed by the architectural firms of <em>Gilmore D. Clarke</em> and
-			<em>Robert Allan Jacobs</em>.
-		</p>
-		<blockquote>"A revolutionary approach to urban housing for the post-war era"</blockquote>
-	</ContentCard>
-</div>
-
-<!-- Card 4: Veterans Housing -->
 <div class="card {cardIndex === 4 ? 'active' : ''}">
-	<ContentCard title="Veterans Housing">
+	<ContentCard title="Historical Integration">
 		<p>
-			The development was originally intended to provide <strong>affordable housing</strong> for returning
-			World War II veterans and their families.
+			As the need for affordable housing continued to climb as the 1930s turned into the 1940s,
+			Robert Moses and Mayor Fiorello La Guardia began planning to offer even more lucrative
+			incentives to private developers. The Metropolitan Life Insurance Company was the perfect
+			target, with WWII giving a “stupendous increase” to all life insurer assets. The amended 1943
+			law, extended the tax exemption to twenty-five years, removed income ceilings on occupants,
+			and struck the clause requiring redevelopers to manage relocation proceedings. Functionally,
+			this meant that private developers could now use eminent domain to erect private housing.
 		</p>
-		<img src="assets/Parchment.jpg" alt="Historical document" style="width: 60%;" />
+		<p>
+			Metropolitan Life was the largest employer in the city at this time, with over 15,000
+			employees in its midtown office alone. Better housing, many believed, also meant longer lives
+			and stronger business. A New York Times reporter noted that the development of Stuyvesant Town
+			was a “purely self-interested proposition” for the nation's largest life insurer, as “people
+			in non-slum areas live longer and continue to pay insurance premiums.” The redevelopment
+			project would also shore up property values in a part of the city where Metropolitan had
+			significant real estate and mortgage holdings and Stuyvesant Town's proximity to the company's
+			lavish headquarters on 23rd Street meant it could also serve as low-rent housing for its
+			workforce.
+		</p>
+		<p>
+			Metropolitan Life officials saw their role differently, of course, publicly framing Stuyvesant
+			Town as simply the latest iteration of the company's longstanding commitment, “characteristic
+			of the American way of life, of private enterprise promoting public welfare.” Privately
+			though, they recognized that rental housing represented a new investment class that might
+			diversify company portfolios and compensate for sagging returns across the board.
+		</p>
 	</ContentCard>
 </div>
 
-<!-- Card 5: Investment Scale -->
 <div class="card {cardIndex === 5 ? 'active' : ''}">
-	<ContentCard title="Investment Scale">
+	<ContentCard title="Historical Integration">
 		<p>
-			Metropolitan Life invested <span class="gradient-text">$90 million</span> in the project, making
-			it one of the largest private housing developments of its time.
+			The success of these developments (StuyTown in lower Manhattan, Parkchester in the Bronx,
+			Rivertown in Harlem) led to insurance-led development around the country. Parkmerced in San
+			Francisco, Parklabrea in Los Angeles, and Parkfairfax were all created by Met Life alone. The
+			perfect conditions of wealthy life insurance companies, and a country desperate for post-war
+			affordable urban housing created this unique period of architectural history.
 		</p>
-		<div class="stat-container">
-			<div class="stat-box">
-				<strong>$90M</strong><br /><small>Investment</small>
-			</div>
-			<div class="stat-box">
-				<strong>1943-47</strong><br /><small>Construction</small>
-			</div>
-		</div>
+		<p>
+			As tax incentives expired and the post-war housing boom slowed, life insurance giants turned
+			their eyes towards the suburbs. This was in large part due to the effect of city planners such
+			as Robert Moses, who prioritized highways and automobile infrastructure, making suburban
+			living more accessible and appealing comparative to urban areas.
+		</p>
 	</ContentCard>
 </div>
 
-<!-- Card 6: Park-like Setting -->
 <div class="card {cardIndex === 6 ? 'active' : ''}">
-	<ContentCard title="Park-like Setting">
-		<p>
-			The buildings are arranged in a <strong>park-like setting</strong> with landscaped courtyards and
-			playgrounds throughout the complex.
-		</p>
-		<img src="assets/Watercolor_ColdPress.jpg" alt="Architectural layout" style="opacity: 0.8;" />
-	</ContentCard>
-</div>
-
-<!-- Card 7: Building Design -->
-<div class="card {cardIndex === 7 ? 'active' : ''}">
-	<ContentCard title="Building Design">
-		<p>
-			Each building is <span class="highlight">13 stories high</span> and features the distinctive
-			<em>red brick facade</em> that has become synonymous with post-war housing.
-		</p>
-		<div class="architecture-box">
-			<h4>Architectural Features:</h4>
-			<ul>
-				<li>Red brick construction</li>
-				<li>13-story height standard</li>
-				<li>Modernist design principles</li>
-			</ul>
-		</div>
-	</ContentCard>
-</div>
-
-<!-- Card 8: Community Focus -->
-<div class="card {cardIndex === 8 ? 'active' : ''}">
-	<ContentCard title="Community Focus">
-		<p>
-			The design emphasizes <strong>community living</strong> with shared spaces and recreational facilities
-			integrated throughout the development.
-		</p>
-		<div class="feature-grid">
-			<div class="feature-box">
-				�️<br /><strong>Green Spaces</strong>
-			</div>
-			<div class="feature-box">
-				🏃‍♂️<br /><strong>Recreation</strong>
-			</div>
-		</div>
-	</ContentCard>
-</div>
-
-<!-- Card 9: Population -->
-<div class="card {cardIndex === 9 ? 'active' : ''}">
-	<ContentCard title="Population">
-		<p>
-			Today, Stuy Town houses approximately <span style="font-size: 1.3em;" class="highlight"
-				>30,000 residents</span
-			>, making it one of the largest residential complexes in Manhattan.
-		</p>
-		<div class="population-box">
-			<strong>Population Density:</strong>
-			One of NYC's most populated single developments
-		</div>
+	<ContentCard title="Historical Integration">
+		<p>When stuy town was announced, there was no shortage of controversy.</p>
 	</ContentCard>
 </div>
 
@@ -197,10 +184,10 @@
 	.parkchester-button {
 		margin-top: 15px;
 		padding: 10px 20px;
-		background: linear-gradient(135deg, #2e58ff 0%, #4d7fff 100%);
-		color: white;
-		border: none;
-		border-radius: 6px;
+		background: none;
+		border: 3px solid #2e58ff;
+		color: #2e58ff;
+		border-radius: 8px;
 		font-family: 'Fira Sans', sans-serif;
 		font-size: 14px;
 		font-weight: 600;
@@ -210,7 +197,8 @@
 	}
 
 	.parkchester-button:hover {
-		background: linear-gradient(135deg, #1e48ef 0%, #3d6fff 100%);
+		background: #2e58ff;
+		color: white;
 		transform: translateY(-1px);
 		box-shadow: 0 4px 12px rgba(46, 88, 255, 0.4);
 	}
