@@ -24,9 +24,11 @@
 				<a href="https://leviv.cool" target="_blank">
 					<img src="./assets/levi.png" alt="Levi" />
 				</a>
-				for
-				<a href="https://itp.nyu.edu/lowres/" target="_blank"> IMA Low Res</a>
-				summer showcase @ NYU.
+				for the IMA Low Res summer showcase @ NYU.
+			</p>
+			<p>
+				Special thanks to <em>Ashton Reeder</em> for Rhino help and <em>Daphne Chiang</em> for the color
+				scheme
 			</p>
 			<p>&copy; August 2025.</p>
 		</div>
@@ -39,7 +41,7 @@
 		bottom: 40px;
 		right: 40px;
 		min-width: 50px;
-		max-width: 250px;
+		max-width: 400px;
 		min-height: 50px;
 		cursor: help;
 		display: flex;

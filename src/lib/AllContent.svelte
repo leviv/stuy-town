@@ -12,7 +12,7 @@
 	<ContentCard title="Introduction Overview">
 		<p>
 			Stuyvesant Town, commonly known as StuyTown, is a housing development in Manhattan, New York
-			City. It is the largest rental community in the United States.
+			City. It is the <em>largest</em> rental community in the United States.
 		</p>
 	</ContentCard>
 </div>
@@ -23,7 +23,7 @@
 			The massive housing complex was conceived as a project between two of the largest forces in
 			New York City in the mid twentieth century - Robert Moses and The Metropolitan Life Company
 			(MetLife). Life insurance companies were flush with cash, and were looking for ways to
-			diversify their investments. At the same time, WWII had only made the housing crisis worse.
+			diversify their investments. At the same time, WWII had only made a bad housing crisis worse.
 		</p>
 		<p>
 			In the early 1900s, New York City was facing an extreme housing crisis. Mass migration after
@@ -89,10 +89,11 @@
 			As the need for affordable housing continued to climb as the 1930s turned into the 1940s,
 			Robert Moses and Mayor Fiorello La Guardia began planning to offer even more lucrative
 			incentives to private developers. The Metropolitan Life Insurance Company was the perfect
-			target, with WWII giving a “stupendous increase” to all life insurer assets. The amended 1943
-			law, extended the tax exemption to twenty-five years, removed income ceilings on occupants,
-			and struck the clause requiring redevelopers to manage relocation proceedings. Functionally,
-			this meant that private developers could now use eminent domain to erect private housing.
+			target, with WWII war bonds providing a “stupendous increase” to all life insurer assets. The
+			amended 1943 law, extended the tax exemption to twenty-five years, removed income ceilings on
+			occupants, and struck the clause requiring redevelopers to manage relocation proceedings.
+			Functionally, this meant that private developers could now use eminent domain to erect private
+			housing.
 		</p>
 		<p>
 			Metropolitan Life was the largest employer in the city at this time, with over 15,000
@@ -373,6 +374,11 @@
 			complex. From the apartments, to the playground equipments, to the plants, everthing was
 			considered.
 		</p>
+		{#if onToggleParkchester}
+			<button on:click={onToggleParkchester} class="switch-button">
+				{showParkchester ? 'Back to Stuy Town' : 'Compare with Parkchester'}
+			</button>
+		{/if}
 	</ContentCard>
 </div>
 
@@ -428,6 +434,7 @@
 		cursor: pointer;
 		transition: all 0.3s ease;
 		box-shadow: 0 2px 8px rgba(46, 88, 255, 0.3);
+		width: 100%;
 	}
 
 	.switch-button:hover {

@@ -95,7 +95,7 @@
 			currentParagraphIndex--;
 			updateCurrentSubtitle();
 			// Reset model flags when navigating away from their respective paragraphs
-			if (currentParagraphIndex !== 3) {
+			if (currentParagraphIndex !== 3 && currentParagraphIndex !== 16) {
 				showParkchester = false;
 			}
 			if (currentParagraphIndex !== 8) {
@@ -104,12 +104,12 @@
 			if (loadAppropriateModel) loadAppropriateModel();
 		} else if (
 			(event.key === 'ArrowDown' || event.key === 'ArrowRight') &&
-			currentParagraphIndex < allCards.length - 1
+			currentParagraphIndex < 18
 		) {
 			currentParagraphIndex++;
 			updateCurrentSubtitle();
 			// Reset model flags when navigating away from their respective paragraphs
-			if (currentParagraphIndex !== 3) {
+			if (currentParagraphIndex !== 3 && currentParagraphIndex !== 16) {
 				showParkchester = false;
 			}
 			if (currentParagraphIndex !== 8) {
@@ -235,7 +235,7 @@
 		loadAppropriateModel = function () {
 			let modelFile = 'stuy-town-transformed.glb'; // default
 
-			if (currentParagraphIndex === 3 && showParkchester) {
+			if ((currentParagraphIndex === 3 || currentParagraphIndex === 16) && showParkchester) {
 				modelFile = 'parkchester-transformed.glb';
 			} else if (currentParagraphIndex === 8 && showRiverton) {
 				modelFile = 'riverton-transformed.glb';
@@ -639,6 +639,14 @@
 		font-style: normal;
 	}
 
+	:global(em) {
+		padding: 0 5px;
+		font-style: italic;
+		font-weight: 500;
+		background: #2e58ff;
+		color: white;
+	}
+
 	.app-container {
 		position: relative;
 		width: 100vw;
@@ -731,7 +739,7 @@
 	.paragraph-content {
 		position: relative;
 		z-index: 3;
-		padding: 20px;
+		padding: 20px 20px 10px 20px;
 		background-color: rgba(255, 255, 255, 0.05);
 		border-radius: 8px;
 		border: 1px solid rgba(255, 255, 255, 0.1);
