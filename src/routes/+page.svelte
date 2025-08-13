@@ -69,13 +69,14 @@
 	let currentModel: THREE.Object3D | null = null; // Track the current loaded model
 	let currentModelFile = ''; // Track which model file is currently loaded
 	let showParkchester = false; // Track if parkchester should be shown
+	let showRiverton = false; // Track if riverton should be shown
 
 	// Content sections data - now just metadata for navigation
 	const contentSections = [
-		{ title: 'Introduction', count: 3 },
-		{ title: 'History', count: 3 },
-		{ title: 'Architecture', count: 3 },
-		{ title: 'Community', count: 3 }
+		{ title: 'Introduction', count: 1 },
+		{ title: 'Founding', count: 5 },
+		{ title: 'Discrimination', count: 7 },
+		{ title: 'Architecture', count: 7 }
 	];
 
 	// Create navigation array
@@ -90,20 +91,29 @@
 
 	// Handle keyboard navigation
 	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'ArrowUp' && currentParagraphIndex > 0) {
+		if ((event.key === 'ArrowUp' || event.key === 'ArrowLeft') && currentParagraphIndex > 0) {
 			currentParagraphIndex--;
 			updateCurrentSubtitle();
-			// Reset parkchester flag when navigating away from paragraph 2
-			if (currentParagraphIndex !== 2) {
+			// Reset model flags when navigating away from their respective paragraphs
+			if (currentParagraphIndex !== 3) {
 				showParkchester = false;
 			}
+			if (currentParagraphIndex !== 8) {
+				showRiverton = false;
+			}
 			if (loadAppropriateModel) loadAppropriateModel();
-		} else if (event.key === 'ArrowDown' && currentParagraphIndex < allCards.length - 1) {
+		} else if (
+			(event.key === 'ArrowDown' || event.key === 'ArrowRight') &&
+			currentParagraphIndex < allCards.length - 1
+		) {
 			currentParagraphIndex++;
 			updateCurrentSubtitle();
-			// Reset parkchester flag when navigating away from paragraph 2
-			if (currentParagraphIndex !== 2) {
+			// Reset model flags when navigating away from their respective paragraphs
+			if (currentParagraphIndex !== 3) {
 				showParkchester = false;
+			}
+			if (currentParagraphIndex !== 8) {
+				showRiverton = false;
 			}
 			if (loadAppropriateModel) loadAppropriateModel();
 		}
@@ -122,6 +132,12 @@
 	// Function to toggle between models (called from AllContent button)
 	function toggleParkchester() {
 		showParkchester = !showParkchester;
+		if (loadAppropriateModel) loadAppropriateModel();
+	}
+
+	// Function to toggle Riverton model (called from AllContent button)
+	function toggleRiverton() {
+		showRiverton = !showRiverton;
 		if (loadAppropriateModel) loadAppropriateModel();
 	}
 
@@ -215,12 +231,15 @@
 		// Array to store all materials that need to be updated
 		const allMaterials = [material];
 
-		// Load the appropriate model based on currentParagraphIndex and showParkchester flag
+		// Load the appropriate model based on currentParagraphIndex and model flags
 		loadAppropriateModel = function () {
-			const modelFile =
-				currentParagraphIndex === 3 && showParkchester
-					? 'parkchester-transformed.glb'
-					: 'stuy-town-transformed.glb';
+			let modelFile = 'stuy-town-transformed.glb'; // default
+
+			if (currentParagraphIndex === 3 && showParkchester) {
+				modelFile = 'parkchester-transformed.glb';
+			} else if (currentParagraphIndex === 8 && showRiverton) {
+				modelFile = 'riverton-transformed.glb';
+			}
 
 			// Only load if the required model is different from the current one
 			if (modelFile !== currentModelFile) {
@@ -580,7 +599,7 @@
 <div class="app-container">
 	<div class="canvas-container" bind:this={canvasContainer}></div>
 	<div class="headers">
-		<h1>{showParkchester ? 'Parkchester' : 'Stuytown'}</h1>
+		<h1>{showParkchester ? 'Parkchester' : showRiverton ? 'Riverton' : 'Stuytown'}</h1>
 		<h2>{currentSubtitle}</h2>
 	</div>
 	<div class="content-container" bind:this={contentContainer}>
@@ -592,6 +611,8 @@
 						cardIndex={currentParagraphIndex}
 						onToggleParkchester={toggleParkchester}
 						{showParkchester}
+						onToggleRiverton={toggleRiverton}
+						{showRiverton}
 					/>
 				</div>
 			</div>
@@ -602,7 +623,6 @@
 			<LiquidGlass opacity={1} />
 			<div class="navigation-content">
 				<p>Use ↑↓ arrow keys to navigate</p>
-				<p>{currentParagraphIndex + 1} / {allCards.length}</p>
 			</div>
 		</div>
 	</div>
@@ -673,7 +693,6 @@
 		bottom: 40px;
 		left: calc(50% - 300px);
 		width: 600px;
-		max-height: 60vh;
 		z-index: 10;
 		overflow: visible;
 		padding: 20px 0 0 0;
@@ -681,7 +700,7 @@
 
 	.paragraph {
 		position: relative;
-		margin: 0 0 20px 0;
+		margin: 0;
 		padding: 0;
 		min-height: 80px;
 		border-radius: 8px;
