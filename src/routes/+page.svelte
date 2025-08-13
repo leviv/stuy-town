@@ -12,6 +12,7 @@
 	import { choosePort, getOrientation } from '$lib/arduino';
 	import LiquidGlass from '$lib/LiquidGlass.svelte';
 	import AllContent from '$lib/AllContent.svelte';
+	import About from './About.svelte';
 	import GUI from 'lil-gui';
 
 	// Canvas element reference
@@ -406,6 +407,7 @@
 		href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Modak&display=swap"
 		rel="stylesheet"
 	/>
+	<title>Stuytown</title>
 </svelte:head>
 
 <div class="app-container">
@@ -433,6 +435,8 @@
 			</div>
 		</div>
 	</div>
+
+	<About />
 </div>
 
 <style>
@@ -460,7 +464,7 @@
 
 	.headers {
 		position: absolute;
-		top: 20px;
+		top: 60px;
 		left: calc(50% - 300px);
 		z-index: 15;
 		text-align: center;
@@ -495,7 +499,7 @@
 
 	.content-container {
 		position: absolute;
-		bottom: 20px;
+		bottom: 40px;
 		left: calc(50% - 300px);
 		width: 600px;
 		max-height: 60vh;
