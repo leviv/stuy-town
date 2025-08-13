@@ -2,6 +2,7 @@
 	import ContentCard from './ContentCard.svelte';
 
 	export let cardIndex: number = 0;
+	export let onLoadParkchester: (() => void) | undefined = undefined;
 </script>
 
 <!-- Card 0: Introduction Overview -->
@@ -22,10 +23,6 @@
 			New York City in the mid twentieth century - Robert Moses and The Metropolitan Life Company
 			(MetLife).
 		</p>
-		<div class="info-box">
-			<strong>Historical Note:</strong>
-			This integration was groundbreaking for its time.
-		</div>
 	</ContentCard>
 </div>
 
@@ -42,6 +39,11 @@
 			<li>11,250 individual apartments</li>
 			<li>80 acres of development</li>
 		</ul>
+		{#if onLoadParkchester}
+			<button on:click={onLoadParkchester} class="parkchester-button">
+				Compare with Parkchester
+			</button>
+		{/if}
 	</ContentCard>
 </div>
 
@@ -190,5 +192,30 @@
 
 	.card.active {
 		display: block;
+	}
+
+	.parkchester-button {
+		margin-top: 15px;
+		padding: 10px 20px;
+		background: linear-gradient(135deg, #2e58ff 0%, #4d7fff 100%);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-family: 'Fira Sans', sans-serif;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		box-shadow: 0 2px 8px rgba(46, 88, 255, 0.3);
+	}
+
+	.parkchester-button:hover {
+		background: linear-gradient(135deg, #1e48ef 0%, #3d6fff 100%);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(46, 88, 255, 0.4);
+	}
+
+	.parkchester-button:active {
+		transform: translateY(0);
 	}
 </style>

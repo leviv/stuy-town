@@ -5,6 +5,8 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 	// @ts-ignore
 	import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+	// @ts-ignore
+	import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 	// import post from lib/post.js
 	import { Post } from '$lib/post.js';
 	import { Material } from '$lib/Material';
@@ -35,6 +37,9 @@
 	let contentContainer: HTMLDivElement;
 	let currentSubtitle = 'Introduction';
 	let currentParagraphIndex = 0;
+	let currentModel: THREE.Object3D | null = null; // Track the current loaded model
+	let currentModelFile = ''; // Track which model file is currently loaded
+	let showParkchester = false; // Track if parkchester should be shown
 
 	// Content sections data - now just metadata for navigation
 	const contentSections = [
@@ -59,9 +64,19 @@
 		if (event.key === 'ArrowUp' && currentParagraphIndex > 0) {
 			currentParagraphIndex--;
 			updateCurrentSubtitle();
+			// Reset parkchester flag when navigating away from paragraph 2
+			if (currentParagraphIndex !== 2) {
+				showParkchester = false;
+			}
+			if (loadAppropriateModel) loadAppropriateModel();
 		} else if (event.key === 'ArrowDown' && currentParagraphIndex < allCards.length - 1) {
 			currentParagraphIndex++;
 			updateCurrentSubtitle();
+			// Reset parkchester flag when navigating away from paragraph 2
+			if (currentParagraphIndex !== 2) {
+				showParkchester = false;
+			}
+			if (loadAppropriateModel) loadAppropriateModel();
 		}
 	}
 
@@ -70,6 +85,15 @@
 		if (currentParagraphIndex >= 0 && currentParagraphIndex < allCards.length) {
 			currentSubtitle = allCards[currentParagraphIndex].sectionTitle;
 		}
+	}
+
+	// Load the appropriate model based on currentParagraphIndex
+	let loadAppropriateModel: () => void;
+
+	// Function to load parkchester model (called from AllContent button)
+	function loadParkchester() {
+		showParkchester = true;
+		if (loadAppropriateModel) loadAppropriateModel();
 	}
 
 	onMount(() => {
@@ -142,6 +166,91 @@
 
 		// Array to store all materials that need to be updated
 		const allMaterials = [material];
+
+		// Load the appropriate model based on currentParagraphIndex and showParkchester flag
+		loadAppropriateModel = function () {
+			const modelFile =
+				currentParagraphIndex === 2 && showParkchester
+					? 'parkchester-transformed.glb'
+					: 'stuy-town-transformed.glb';
+
+			// Only load if the required model is different from the current one
+			if (modelFile !== currentModelFile) {
+				loadModel(modelFile);
+			}
+		};
+
+		// Generic model loading function
+		function loadModel(filename: string) {
+			// Don't remove the current model yet - keep it until new one is ready
+			const oldModel = currentModel;
+
+			// Set up DRACO loader for compressed GLB files
+			const dracoLoader = new DRACOLoader();
+			dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+			const loader = new GLTFLoader();
+			loader.setDRACOLoader(dracoLoader);
+
+			loader.load(
+				filename,
+				(gltf: { scene: THREE.Object3D<THREE.Object3DEventMap> }) => {
+					const model = gltf.scene;
+
+					gltf.scene.traverse((child) => {
+						if ((child as THREE.Mesh).isMesh) {
+							const mesh = child as THREE.Mesh;
+							// Use the same material as the cube but make it double-sided
+							const doubleSidedMaterial = material.clone();
+							doubleSidedMaterial.side = THREE.DoubleSide;
+							mesh.material = doubleSidedMaterial;
+
+							// Add the cloned material to our array so GUI updates affect it
+							allMaterials.push(doubleSidedMaterial);
+						}
+					});
+
+					model.scale.set(0.1, 0.1, 0.1); // Scale down the model
+
+					// Center the model and place bottom on ground
+					const box = new THREE.Box3().setFromObject(model);
+					const center = box.getCenter(new THREE.Vector3());
+
+					// Create a wrapper group to handle the transform origin properly
+					const modelWrapper = new THREE.Group();
+
+					// Move model so its center is at origin horizontally, but bottom is at y=0
+					model.position.x = -center.x;
+					model.position.z = -center.z;
+					model.position.y = -box.min.y; // Move up so bottom is at y=0
+
+					// Add the model to the wrapper
+					modelWrapper.add(model);
+
+					// Add the new model to the scene
+					scene.add(modelWrapper);
+
+					// Now remove the old model after the new one is added
+					if (oldModel) {
+						scene.remove(oldModel);
+					}
+
+					// Update tracking variables
+					currentModel = modelWrapper;
+					arduinoModel = modelWrapper;
+					currentModelFile = filename;
+
+					console.log(`${filename} loaded and swapped`);
+				},
+				(xhr: { loaded: number; total: number }) => {
+					console.log(`${filename}: ${(xhr.loaded / xhr.total) * 100}% loaded`);
+				},
+				(error: any) => {
+					console.error(`An error happened loading ${filename}`, error);
+				}
+			);
+		}
+
 		// Generate custom material params that update all materials
 		materialFolder.add(material, 'roughness', 0, 1).onChange((v: number) => {
 			updateAllMaterials('roughness', v);
@@ -215,56 +324,8 @@
 			post.setSize(canvasWidth, canvasHeight);
 		});
 
-		// Load GLTF
-		const loader = new GLTFLoader();
-		loader.load(
-			'stuy-town.gltf',
-			(gltf: { scene: THREE.Object3D<THREE.Object3DEventMap> }) => {
-				const model = gltf.scene;
-
-				gltf.scene.traverse((child) => {
-					if ((child as THREE.Mesh).isMesh) {
-						const mesh = child as THREE.Mesh;
-						// Use the same material as the cube but make it double-sided
-						const doubleSidedMaterial = material.clone();
-						doubleSidedMaterial.side = THREE.DoubleSide;
-						mesh.material = doubleSidedMaterial;
-
-						// Add the cloned material to our array so GUI updates affect it
-						allMaterials.push(doubleSidedMaterial);
-					}
-				});
-
-				model.scale.set(0.1, 0.1, 0.1); // Scale down the model
-
-				// Center the model and place bottom on ground
-				const box = new THREE.Box3().setFromObject(model);
-				const center = box.getCenter(new THREE.Vector3());
-
-				// Create a wrapper group to handle the transform origin properly
-				const modelWrapper = new THREE.Group();
-
-				// Move model so its center is at origin horizontally, but bottom is at y=0
-				model.position.x = -center.x;
-				model.position.z = -center.z;
-				model.position.y = -box.min.y; // Move up so bottom is at y=0
-
-				// Add the model to the wrapper
-				modelWrapper.add(model);
-
-				// Store the wrapper as the arduino model for rotation control
-				arduinoModel = modelWrapper;
-
-				scene.add(modelWrapper);
-				console.log('Model lodaded');
-			},
-			(xhr: { loaded: number; total: number }) => {
-				console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-			},
-			(error: any) => {
-				console.error('An error happened', error);
-			}
-		);
+		// Load initial model
+		loadAppropriateModel();
 
 		const render = () => {
 			// Apply Arduino rotation to the model with smooth interpolation
@@ -421,7 +482,7 @@
 			<div class="paragraph">
 				<LiquidGlass opacity={1} />
 				<div class="paragraph-content">
-					<AllContent cardIndex={currentParagraphIndex} />
+					<AllContent cardIndex={currentParagraphIndex} onLoadParkchester={loadParkchester} />
 				</div>
 			</div>
 		{/if}
