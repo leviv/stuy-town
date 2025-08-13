@@ -8,10 +8,9 @@
 <div class="card {cardIndex === 0 ? 'active' : ''}">
 	<ContentCard title="Introduction Overview">
 		<p>
-			Stuyvesant Town, commonly known as Stuy Town, is a large post-World War II private residential
-			development on the east side of Manhattan.
+			Stuyvesant Town, commonly known as StuyTown, is a housing development in Manhattan, New York
+			City. It is the largest rental community in the United States.
 		</p>
-		<img src="assets/Craft_Light.jpg" alt="Stuyvesant Town aerial view" />
 	</ContentCard>
 </div>
 
@@ -19,8 +18,9 @@
 <div class="card {cardIndex === 1 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			Built by the <em>Metropolitan Life Insurance Company</em>, it was one of the first racially
-			integrated housing developments in the United States.
+			The massive housing complex was conceived as a project between two of the largest forces in
+			New York City in the mid twentieth century - Robert Moses and The Metropolitan Life Company
+			(MetLife).
 		</p>
 		<div class="info-box">
 			<strong>Historical Note:</strong>

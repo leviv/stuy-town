@@ -427,7 +427,7 @@
 		{/if}
 
 		<!-- Navigation hint -->
-		<div class="navigation-hint">
+		<div class="navigation-hint" style={currentParagraphIndex !== 0 ? 'display: none;' : ''}>
 			<LiquidGlass opacity={1} />
 			<div class="navigation-content">
 				<p>Use ↑↓ arrow keys to navigate</p>

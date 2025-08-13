@@ -1,6 +1,4 @@
 <script lang="ts">
-	export let title: string;
-	export let content: string = '';
 </script>
 
 <div class="content-card">
@@ -8,10 +6,6 @@
 </div>
 
 <style>
-	.content-card {
-		/* Base card styling - can be overridden by parent */
-	}
-
 	.content-card :global(p) {
 		margin: 0 0 10px 0;
 		color: #222;
@@ -59,13 +53,6 @@
 	.content-card :global(small) {
 		font-size: 11px;
 		opacity: 0.8;
-	}
-
-	.content-card :global(.info-box) {
-		background: rgba(255, 255, 255, 0.1);
-		padding: 10px;
-		border-radius: 4px;
-		margin: 10px 0;
 	}
 
 	.content-card :global(.stat-container) {
