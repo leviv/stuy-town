@@ -77,7 +77,7 @@
 		</p>
 		{#if onToggleParkchester}
 			<button on:click={onToggleParkchester} class="switch-button">
-				{showParkchester ? 'Back to Stuy Town' : 'Compare with Parkchester'}
+				{showParkchester ? 'Back to StuyTown' : 'Compare with Parkchester'}
 			</button>
 		{/if}
 	</ContentCard>
@@ -137,7 +137,7 @@
 <div class="card {cardIndex === 6 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			When stuy town was announced, there was no shortage of controversy. There were two big issues
+			When StuyTown was announced, there was no shortage of controversy. There were two big issues
 			at play:
 		</p>
 		<div class="citation">
@@ -157,7 +157,7 @@
 <div class="card {cardIndex === 7 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			The real heart of the controversy was the fact that Stuy Town was built with public resources,
+			The real heart of the controversy was the fact that StuyTown was built with public resources,
 			but did not serve everyone in the public equally. To clear space for the new construction,
 			developers demolished 500 stores and small factories, three churches, three schools, and two
 			theaters. In their place was put private housing, private roads and private parks, for only
@@ -199,7 +199,7 @@
 		</p>
 		{#if onToggleRiverton}
 			<button on:click={onToggleRiverton} class="switch-button">
-				{showRiverton ? 'Back to Stuy Town' : 'Compare with Riverton'}
+				{showRiverton ? 'Back to StuyTown' : 'Compare with Riverton'}
 			</button>
 		{/if}
 	</ContentCard>
@@ -275,7 +275,7 @@
 			Fair Housing Act of 1968.
 		</p>
 		<p>
-			This is a legacy that current Stuy Town residents should be proud of and continue to uphold.
+			This is a legacy that current StuyTown residents should be proud of and continue to uphold.
 		</p>
 	</ContentCard>
 </div>
@@ -323,7 +323,7 @@
 <div class="card {cardIndex === 15 ? 'active' : ''}">
 	<ContentCard title="Legacy">
 		<p>
-			Arguably the two most influential designers of Stuy Town, Gilmore David Clarke and Michael
+			Arguably the two most influential designers of StuyTown, Gilmore David Clarke and Michael
 			Rapuano, were well versed in the parks amongst the towers. They had both grown up surrounded
 			by nature. Clarke was the son of a flourist and the grandon of a gardener, while Rapuano was
 			the son of the Superintendent of Parks in the City of Syracuse. Both went on to work for the
@@ -376,7 +376,7 @@
 		</p>
 		{#if onToggleParkchester}
 			<button on:click={onToggleParkchester} class="switch-button">
-				{showParkchester ? 'Back to Stuy Town' : 'Compare with Parkchester'}
+				{showParkchester ? 'Back to StuyTown' : 'Compare with Parkchester'}
 			</button>
 		{/if}
 	</ContentCard>
@@ -388,7 +388,7 @@
 			In fact, the board of design was so successful the economical use of material in Parkchester,
 			that their plans have been widely adopted in by New York City Housing in other public housing
 			projects. And while many 'tower in the park' developments in New York City and around world
-			have been largely seen as failures, these three developments (Parkchester, Stuy Town, and
+			have been largely seen as failures, these three developments (Parkchester, StuyTown, and
 			Riverton) have been recognized as successful models.
 		</p>
 		<p>
