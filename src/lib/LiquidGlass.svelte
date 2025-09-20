@@ -44,6 +44,6 @@
 
 <style>
 	.liquid-glass {
-		background: rgba(255, 255, 255, 0.73);
+		background: rgba(255, 255, 255, 0.81);
 	}
 </style>

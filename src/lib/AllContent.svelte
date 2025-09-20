@@ -236,7 +236,7 @@
 		/>
 		<div class="citation">
 			Pamphlet by the Town and Village Committee to End Discrimination in Stuyvesant Town showing 14
-			families evicted for their fight against segregation (1950)
+			families who were evicted for their fight against segregation (1950)
 		</div>
 	</ContentCard>
 </div>

@@ -30,6 +30,7 @@
 					Special thanks to <em>Ashton Reeder</em> for Rhino help and <em>Daphne Chiang</em> for the
 					color scheme
 				</p>
+				<p>Click on the page and press 'd' to toggle the debug GUI.</p>
 				<p>&copy; August 2025.</p>
 			</div>
 		</div>

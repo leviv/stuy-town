@@ -168,7 +168,17 @@
 
 		// Debug GUI
 		const gui = new GUI();
-		gui.close();
+		gui.hide();
+
+		function handleKeydown(event: KeyboardEvent) {
+			if (event.key.toLowerCase() === 'd') {
+				if (gui._hidden) {
+					gui.show();
+				} else {
+					gui.hide();
+				}
+			}
+		}
 		const materialFolder = gui.addFolder('Material');
 
 		// Lighting controls folder
@@ -596,7 +606,9 @@
 	<title>StuyTown</title>
 </svelte:head>
 
-<div class="app-container">
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="app-container" on:keydown={handleKeydown} tabindex="0">
 	<div class="canvas-container" bind:this={canvasContainer}></div>
 	<div class="headers">
 		<h1>{showParkchester ? 'Parkchester' : showRiverton ? 'Riverton' : 'StuyTown'}</h1>
