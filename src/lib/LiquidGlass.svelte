@@ -1,4 +1,6 @@
 <script lang="ts">
+	// Original react component from https://medium.com/ekino-france/liquid-glass-in-css-and-svg-839985fcb88d
+	// Tweaked and adopted to Svelte by me :)
 	import { onMount } from 'svelte';
 	import { getDisplacementFilter } from './LiquidHelpers';
 
