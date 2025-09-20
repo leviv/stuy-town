@@ -605,25 +605,27 @@
 	<div class="content-container" bind:this={contentContainer}>
 		{#if allCards[currentParagraphIndex]}
 			<div class="paragraph">
-				<LiquidGlass opacity={1} />
-				<div class="paragraph-content">
-					<AllContent
-						cardIndex={currentParagraphIndex}
-						onToggleParkchester={toggleParkchester}
-						{showParkchester}
-						onToggleRiverton={toggleRiverton}
-						{showRiverton}
-					/>
-				</div>
+				<LiquidGlass radius={30} depth={10} blur={3} chromaticAberration={300}>
+					<div class="paragraph-content">
+						<AllContent
+							cardIndex={currentParagraphIndex}
+							onToggleParkchester={toggleParkchester}
+							{showParkchester}
+							onToggleRiverton={toggleRiverton}
+							{showRiverton}
+						/>
+					</div>
+				</LiquidGlass>
 			</div>
 		{/if}
 
 		<!-- Navigation hint -->
 		<div class="navigation-hint" style={currentParagraphIndex !== 0 ? 'display: none;' : ''}>
-			<LiquidGlass opacity={1} />
-			<div class="navigation-content">
-				<p>Use ↑↓ arrow keys to navigate</p>
-			</div>
+			<LiquidGlass radius={30} depth={10} blur={3} chromaticAberration={300}>
+				<div class="navigation-content">
+					<p>Use ↑↓ arrow keys to navigate</p>
+				</div>
+			</LiquidGlass>
 		</div>
 	</div>
 
@@ -739,10 +741,10 @@
 	.paragraph-content {
 		position: relative;
 		z-index: 3;
-		padding: 20px 20px 10px 20px;
+		padding: 20px 20px 15px 20px;
 		background-color: rgba(255, 255, 255, 0.05);
-		border-radius: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		font-weight: 600;
+		font-size: 14px;
 	}
 
 	.navigation-content {
@@ -750,7 +752,5 @@
 		z-index: 3;
 		padding: 20px;
 		background-color: rgba(255, 255, 255, 0.05);
-		border-radius: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 </style>

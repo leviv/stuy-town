@@ -14,25 +14,26 @@
 	}}
 	role="contentinfo"
 >
-	<LiquidGlass opacity={1} />
-	<div class="about-content">
-		<span style="display:{showIcon ? 'block' : 'none'};" class="icon">?</span>
+	<LiquidGlass radius={30} depth={10} blur={3} chromaticAberration={300}>
+		<div class="about-content">
+			<span style="display:{showIcon ? 'block' : 'none'};" class="icon">?</span>
 
-		<div class="made-by text-box" style="display:{showIcon ? 'none' : 'block'};">
-			<p>
-				Made by
-				<a href="https://leviv.cool" target="_blank">
-					<img src="./assets/levi.png" alt="Levi" />
-				</a>
-				for the IMA Low Res summer showcase @ NYU.
-			</p>
-			<p>
-				Special thanks to <em>Ashton Reeder</em> for Rhino help and <em>Daphne Chiang</em> for the color
-				scheme
-			</p>
-			<p>&copy; August 2025.</p>
+			<div class="made-by text-box" style="display:{showIcon ? 'none' : 'block'};">
+				<p>
+					Made by
+					<a href="https://leviv.cool" target="_blank">
+						<img src="./assets/levi.png" alt="Levi" />
+					</a>
+					for the IMA Low Res summer showcase @ NYU.
+				</p>
+				<p>
+					Special thanks to <em>Ashton Reeder</em> for Rhino help and <em>Daphne Chiang</em> for the
+					color scheme
+				</p>
+				<p>&copy; August 2025.</p>
+			</div>
 		</div>
-	</div>
+	</LiquidGlass>
 </div>
 
 <style lang="scss">
