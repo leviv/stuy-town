@@ -605,7 +605,7 @@
 	<div class="content-container" bind:this={contentContainer}>
 		{#if allCards[currentParagraphIndex]}
 			<div class="paragraph">
-				<LiquidGlass radius={30} depth={10} blur={3} chromaticAberration={300}>
+				<LiquidGlass>
 					<div class="paragraph-content">
 						<AllContent
 							cardIndex={currentParagraphIndex}
@@ -621,7 +621,7 @@
 
 		<!-- Navigation hint -->
 		<div class="navigation-hint" style={currentParagraphIndex !== 0 ? 'display: none;' : ''}>
-			<LiquidGlass radius={30} depth={10} blur={3} chromaticAberration={300}>
+			<LiquidGlass>
 				<div class="navigation-content">
 					<p>Use ↑↓ arrow keys to navigate</p>
 				</div>

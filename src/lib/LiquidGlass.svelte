@@ -2,11 +2,11 @@
 	import { onMount } from 'svelte';
 	import { getDisplacementFilter } from './LiquidHelpers';
 
-	export let depth = 20;
-	export let radius = 10;
-	export let strength = 1;
-	export let chromaticAberration = 0.5;
-	export let blur = 2;
+	const depth = 10;
+	const radius = 30;
+	const strength = 100;
+	const chromaticAberration = 100;
+	const blur = 1;
 
 	let glassElement: HTMLElement;
 	let rect: DOMRect;

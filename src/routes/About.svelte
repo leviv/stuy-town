@@ -14,7 +14,7 @@
 	}}
 	role="contentinfo"
 >
-	<LiquidGlass radius={30} depth={10} blur={3} chromaticAberration={300}>
+	<LiquidGlass>
 		<div class="about-content">
 			<span style="display:{showIcon ? 'block' : 'none'};" class="icon">?</span>
 
