@@ -208,10 +208,10 @@
 <div class="card {cardIndex === 9 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			And residents of StuyTown were not silent in the face of these injustices. The population
-			being compromised almost entirely of WWII veterans, these men who had fought facism abroad
-			were calling to lay the groundwork for a more quitable post-war America at home. In fact, 62%
-			of residents favored lifting ending discrimination in the complex.
+			And residents of StuyTown were not silent in the face of these injustices. The population was
+			compromised almost entirely of WWII veterans, and these men who had fought facism abroad were
+			calling to lay the groundwork for a more equitable America at home. In fact, 62% of residents
+			favored lifting ending discrimination in the complex.
 		</p>
 		<div class="citation">
 			"If Negro and white can die side by side, they should be permitted to live side by side" -
@@ -220,9 +220,10 @@
 		<p>
 			Residents formed the Tenants' Committee to End Discrimination in Stuyvesant Town to advocate
 			for integration, not just in StuyTown, but across New York. Activists were routinely evicted
-			for holding rallies and posting flyers. In the case of University Professor Lee Lorch, fired
-			from their position and blacklisted from new jobs. This caused outrage from around the
-			country, with even Albert Einstein writing a letter decrying the action.
+			for holding rallies and posting flyers in the community. University Professor Lee Lorch was
+			fired from their position and blacklisted from new other academic positions, eventually
+			leading him to move abroad to find work. This caused outrage around the country, with
+			scientist Albert Einstein publicly releasing a letter decrying the action.
 		</p>
 	</ContentCard>
 </div>
