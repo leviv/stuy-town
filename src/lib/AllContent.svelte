@@ -185,7 +185,7 @@
 	<ContentCard title="Historical Integration">
 		<p>
 			Shamefaced by his role in the controversy, La Guardia sought to balance the scales by building
-			more public housing in predominantly black and Puerto Rican neighborhoods. Abraham Lincoln and
+			more public housing in predominantly black and Puerto Rican neighborhoods. The Abraham Lincoln and
 			James Weldon Johnson houses, as well as the Met Life constructed Riverton Houses were all part
 			of this effort.
 		</p>
