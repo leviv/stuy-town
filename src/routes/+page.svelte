@@ -826,5 +826,9 @@
 		.navigation-buttons {
 			display: flex;
 		}
+
+		.content-container {
+			padding-bottom: 100px;
+		}
 	}
 </style>
