@@ -7,7 +7,6 @@
 	import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 	// @ts-ignore
 	import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
-	// import post from lib/post.js
 	import { Post } from '$lib/post.js';
 	import { Material } from '$lib/Material';
 	import { generateParams as generateEnvParams } from '$lib/envMap';
@@ -39,17 +38,14 @@
 
 	// Helper function to handle angle wrapping for smooth interpolation
 	function interpolateAngle(current: number, target: number, factor: number): number {
-		// Calculate the difference between target and current
 		let diff = target - current;
 
-		// Handle wrapping - if difference is greater than 180, go the other way
 		if (diff > 180) {
 			diff -= 360;
 		} else if (diff < -180) {
 			diff += 360;
 		}
 
-		// Apply the interpolation to the difference
 		return current + diff * factor;
 	}
 
@@ -86,8 +82,6 @@
 			cardIndex: sectionIndex * 3 + cardIndex
 		}))
 	);
-
-	let scrollY = 0;
 
 	// Handle keyboard navigation
 	function handleKeydown(event: KeyboardEvent) {
@@ -585,6 +579,15 @@
 
 		// Add keyboard event listener
 		window.addEventListener('keydown', handleKeydown);
+		window.addEventListener('resize', () => {
+			const width = window.innerWidth;
+			const height = window.innerHeight;
+			console.log(`Resizing to ${width}x${height}`);
+			renderer.setSize(width, height);
+			camera.aspect = width / height;
+			camera.updateProjectionMatrix();
+			post.setSize(width, height);
+		});
 
 		// Initialize subtitle
 		updateCurrentSubtitle();
@@ -711,13 +714,16 @@
 	}
 
 	.content-container {
-		position: absolute;
-		bottom: 40px;
-		left: calc(50% - 300px);
-		width: 600px;
-		z-index: 10;
-		overflow: visible;
-		padding: 20px 0 0 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		align-items: center;
+		max-width: 600px;
+		margin: 0 auto;
+		width: 100%;
+		height: 100%;
+		gap: 10px;
+		padding: 10px;
 	}
 
 	.paragraph {
@@ -734,7 +740,6 @@
 	}
 
 	.navigation-hint {
-		margin-top: 10px;
 		color: black;
 		border-radius: 8px;
 		overflow: hidden;
