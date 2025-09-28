@@ -140,7 +140,6 @@
 
 		const canvasWidth = document.documentElement.clientWidth;
 		const canvasHeight = document.documentElement.clientHeight;
-		console.log(`Initializing canvas at ${canvasWidth}x${canvasHeight}`);
 
 		// Camera
 		camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 10000);
@@ -507,7 +506,10 @@
 				const t = time / 60; // Normalize to 0-1
 
 				// Scale factor for camera distance when Arduino is connected
-				const zoomScale = arduinoSettings.enabled ? 2.5 : 1.0; // Zoom out by 2.5x when Arduino connected
+				let zoomScale = arduinoSettings.enabled ? 2.5 : 1.0; // Zoom out by 2.5x when Arduino connected
+				if (canvasWidth < 767) {
+					zoomScale = 5;
+				}
 
 				// Define waypoints for camera path (adjust these based on your building layout)
 				const baseCameraPoints = [
