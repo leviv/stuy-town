@@ -23,17 +23,18 @@
 			The massive housing complex was conceived as a project between two of the largest forces in
 			New York City in the mid twentieth century - Robert Moses and The Metropolitan Life Company
 			(MetLife). Life insurance companies were flush with cash, and were looking for ways to
-			diversify their investments. At the same time, WWII had only made a bad housing crisis worse.
+			diversify their investments. At the same time, WWII had only made a bad housing crisis worse
+			in the city.
 		</p>
 		<p>
 			In the early 1900s, New York City was facing an extreme housing crisis. Mass migration after
 			WWI and the great depression had left resources strained, and led to crowded, unsanitary
-			tenements. In 1926, Governor Al Smith, convinced a reluctant legislature to pass the Limited
-			Dividend Housing Companies Law. This gave private developers twenty years of tax exemption in
-			return for limited rents and profits. Most projects built under the program were
-			union-sponsored, non-profit cooperatives. However, the program was unpopular, with private
-			developers unwilling to undertake the risk of construction for seemingly less lucrative
-			rent-stabilized units.
+			tenements. In 1926, Governor Al Smith, convinced a reluctant legislature to pass the <i
+				>Limited Dividend Housing Companies Law</i
+			>. This gave private developers twenty years of tax exemption in return for capped rent prices
+			and thus limited profits. Some union-sponsored, non-profit cooperatives were built under this
+			program but it was overall unpopular. Most private developers were simply unwilling to
+			undertake the risk of construction for seemingly less lucrative rent-stabilized units.
 		</p>
 		<div class="citation">
 			<a
@@ -49,13 +50,14 @@
 <div class="card {cardIndex === 2 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			One private developer with a history of involvement in public health initiatives was
-			interested in the program, and In March 1922, Met Life executives succeeded in pressuring the
-			legislature to pass the so-called “Metropolitan Bill.” This enabled them, and all insurance
-			companies operating in New York State to invest up to ten percent of their assets in
-			residential development, with profits capped at six percent. This led to the creation of
-			Metropolitan Life apartments in Queens, but little other development. However, the coming
-			depression would change the pace of life insurance based development.
+			However, there was one private developer with a history of involvement in public health
+			initiatives who was uniquely positioned to take advantage of the program, and In March 1922,
+			Met Life executives succeeded in pressuring the legislature to pass the so-called
+			“Metropolitan Bill.” This enabled them, and all insurance companies operating in New York
+			State, to invest up to ten percent of their assets in residential development, with profits
+			capped at six percent. This led to the creation of Metropolitan Life apartments in Queens, but
+			little other development. However, the coming depression would change the pace of life
+			insurance based development.
 		</p>
 		<img src="assets/met-life-apts-lic.png" alt="Metropolitan Life Apartments in LIC, Queens" />
 	</ContentCard>
@@ -185,9 +187,9 @@
 	<ContentCard title="Historical Integration">
 		<p>
 			Shamefaced by his role in the controversy, La Guardia sought to balance the scales by building
-			more public housing in predominantly black and Puerto Rican neighborhoods. The Abraham Lincoln and
-			James Weldon Johnson houses, as well as the Met Life constructed Riverton Houses were all part
-			of this effort.
+			more public housing in predominantly black and Puerto Rican neighborhoods. The Abraham Lincoln
+			and James Weldon Johnson houses, as well as the Met Life constructed Riverton Houses were all
+			part of this effort.
 		</p>
 		<p>
 			This 'separate but equal' approach hardly silenced the criticism. Especially because they were

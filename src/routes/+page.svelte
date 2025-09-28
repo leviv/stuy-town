@@ -770,7 +770,7 @@
 		z-index: 3;
 		padding: 20px 20px 15px 20px;
 		background-color: rgba(255, 255, 255, 0.05);
-		font-weight: 600;
+		font-weight: 450;
 		font-size: 14px;
 	}
 
