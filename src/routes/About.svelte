@@ -40,8 +40,8 @@
 <style lang="scss">
 	.about {
 		position: absolute;
-		bottom: 40px;
-		right: 40px;
+		bottom: 10px;
+		right: 10px;
 		min-width: 50px;
 		max-width: 400px;
 		min-height: 50px;
@@ -50,8 +50,9 @@
 		justify-content: center;
 		align-items: center;
 
-		@media (max-width: 450px) {
-			right: auto;
+		@media (max-width: 767px) {
+			top: 10px;
+			bottom: unset;
 		}
 
 		z-index: 1000;

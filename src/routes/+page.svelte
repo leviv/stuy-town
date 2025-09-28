@@ -83,33 +83,33 @@
 		}))
 	);
 
+	// Shared navigation function
+	function navigate(direction: 'prev' | 'next') {
+		if (direction === 'prev' && currentParagraphIndex > 0) {
+			currentParagraphIndex--;
+		} else if (direction === 'next' && currentParagraphIndex < 18) {
+			currentParagraphIndex++;
+		} else {
+			return; // Early return if navigation isn't possible
+		}
+
+		updateCurrentSubtitle();
+		// Reset model flags when navigating away from their respective paragraphs
+		if (currentParagraphIndex !== 3 && currentParagraphIndex !== 16) {
+			showParkchester = false;
+		}
+		if (currentParagraphIndex !== 8) {
+			showRiverton = false;
+		}
+		if (loadAppropriateModel) loadAppropriateModel();
+	}
+
 	// Handle keyboard navigation
 	function handleKeydown(event: KeyboardEvent) {
-		if ((event.key === 'ArrowUp' || event.key === 'ArrowLeft') && currentParagraphIndex > 0) {
-			currentParagraphIndex--;
-			updateCurrentSubtitle();
-			// Reset model flags when navigating away from their respective paragraphs
-			if (currentParagraphIndex !== 3 && currentParagraphIndex !== 16) {
-				showParkchester = false;
-			}
-			if (currentParagraphIndex !== 8) {
-				showRiverton = false;
-			}
-			if (loadAppropriateModel) loadAppropriateModel();
-		} else if (
-			(event.key === 'ArrowDown' || event.key === 'ArrowRight') &&
-			currentParagraphIndex < 18
-		) {
-			currentParagraphIndex++;
-			updateCurrentSubtitle();
-			// Reset model flags when navigating away from their respective paragraphs
-			if (currentParagraphIndex !== 3 && currentParagraphIndex !== 16) {
-				showParkchester = false;
-			}
-			if (currentParagraphIndex !== 8) {
-				showRiverton = false;
-			}
-			if (loadAppropriateModel) loadAppropriateModel();
+		if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+			navigate('prev');
+		} else if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+			navigate('next');
 		}
 	}
 
@@ -138,8 +138,9 @@
 	onMount(() => {
 		scene = new THREE.Scene();
 
-		const canvasWidth = window.innerWidth;
-		const canvasHeight = window.innerHeight;
+		const canvasWidth = document.documentElement.clientWidth;
+		const canvasHeight = document.documentElement.clientHeight;
+		console.log(`Initializing canvas at ${canvasWidth}x${canvasHeight}`);
 
 		// Camera
 		camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 10000);
@@ -618,6 +619,15 @@
 		<h2>{currentSubtitle}</h2>
 	</div>
 	<div class="content-container" bind:this={contentContainer}>
+		<!-- Navigation hint -->
+		<div class="navigation-hint" style={currentParagraphIndex !== 0 ? 'display: none;' : ''}>
+			<LiquidGlass>
+				<div class="navigation-content">
+					<p>Use ↑↓ arrow keys to navigate</p>
+				</div>
+			</LiquidGlass>
+		</div>
+
 		{#if allCards[currentParagraphIndex]}
 			<div class="paragraph">
 				<LiquidGlass>
@@ -634,12 +644,16 @@
 			</div>
 		{/if}
 
-		<!-- Navigation hint -->
-		<div class="navigation-hint" style={currentParagraphIndex !== 0 ? 'display: none;' : ''}>
+		<div class="navigation-buttons">
 			<LiquidGlass>
-				<div class="navigation-content">
-					<p>Use ↑↓ arrow keys to navigate</p>
-				</div>
+				<button class:disabled={currentParagraphIndex <= 0} on:click={() => navigate('prev')}>
+					&lt; Previous
+				</button>
+			</LiquidGlass>
+			<LiquidGlass>
+				<button class:disabled={currentParagraphIndex >= 18} on:click={() => navigate('next')}>
+					Next &gt;
+				</button>
 			</LiquidGlass>
 		</div>
 	</div>
@@ -724,6 +738,7 @@
 		height: 100%;
 		gap: 10px;
 		padding: 10px;
+		box-sizing: border-box;
 	}
 
 	.paragraph {
@@ -732,10 +747,8 @@
 		padding: 0;
 		min-height: 80px;
 		border-radius: 8px;
-		overflow: hidden;
-		z-index: 2;
-		opacity: 1;
-		transform: translateY(0);
+		max-height: 80%;
+		overflow-y: scroll;
 		transition: all 0.3s ease;
 	}
 
@@ -743,9 +756,6 @@
 		color: black;
 		border-radius: 8px;
 		overflow: hidden;
-		z-index: 2;
-		opacity: 1;
-		transform: translateY(0);
 		transition: all 0.3s ease;
 	}
 
@@ -769,5 +779,52 @@
 		z-index: 3;
 		padding: 20px;
 		background-color: rgba(255, 255, 255, 0.05);
+	}
+
+	.navigation-buttons {
+		display: none;
+		justify-content: space-between;
+		width: 100%;
+		gap: 10px;
+	}
+
+	.navigation-buttons button {
+		padding: 10px 20px;
+		background-color: rgba(255, 255, 255, 0.05);
+		border: none;
+		font-family: 'Fira Sans', sans-serif;
+		font-weight: 600;
+		font-size: 14px;
+		color: black;
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+
+	.navigation-buttons button.disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	@media only screen and (max-width: 767px) {
+		.headers {
+			top: 30px;
+		}
+
+		h1 {
+			font-size: 40px;
+			letter-spacing: 5px;
+		}
+
+		h2 {
+			font-size: 25px;
+		}
+
+		.navigation-hint {
+			display: none;
+		}
+
+		.navigation-buttons {
+			display: flex;
+		}
 	}
 </style>
