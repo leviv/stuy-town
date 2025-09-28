@@ -649,9 +649,12 @@
 		<div class="navigation-buttons">
 			<LiquidGlass>
 				<button class:disabled={currentParagraphIndex <= 0} on:click={() => navigate('prev')}>
-					&lt; Previous
+					&lt; Prev
 				</button>
 			</LiquidGlass>
+			<span class="navigation-index">
+				{currentParagraphIndex + 1} / {allCards.length - 1}
+			</span>
 			<LiquidGlass>
 				<button class:disabled={currentParagraphIndex >= 18} on:click={() => navigate('next')}>
 					Next &gt;
@@ -784,10 +787,12 @@
 	}
 
 	.navigation-buttons {
-		display: none;
+		display: flex;
 		justify-content: space-between;
+		align-items: center;
 		width: 100%;
 		gap: 10px;
+		z-index: 10;
 	}
 
 	.navigation-buttons button {
