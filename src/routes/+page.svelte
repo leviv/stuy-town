@@ -749,7 +749,7 @@
 		padding: 0;
 		min-height: 80px;
 		border-radius: 8px;
-		max-height: 80%;
+		max-height: 75%;
 		overflow-y: scroll;
 		transition: all 0.3s ease;
 	}
@@ -830,7 +830,7 @@
 		}
 
 		.content-container {
-			padding-bottom: 100px;
+			padding-bottom: 120px;
 		}
 	}
 </style>
