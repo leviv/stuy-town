@@ -29,7 +29,7 @@
 		<p>
 			In the early 1900s, New York City was facing an extreme housing crisis. Mass migration after
 			WWI and the great depression had left resources strained, and led to crowded, unsanitary
-			tenements. In 1926, Governor Al Smith, convinced a reluctant legislature to pass the <i
+			tenements. In 1926, Governor Al Smith convinced a reluctant legislature to pass the <i
 				>Limited Dividend Housing Companies Law</i
 			>. This gave private developers twenty years of tax exemption in return for capped rent prices
 			and thus limited profits. Some union-sponsored, non-profit cooperatives were built under this
