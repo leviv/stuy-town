@@ -23,7 +23,7 @@
 			The massive housing complex was conceived as a project between two of the largest forces in
 			New York City in the mid twentieth century - Robert Moses and The Metropolitan Life Company
 			(MetLife). Life insurance companies were flush with cash, and were looking for ways to
-			diversify their investments. At the same time, WWII had only made a bad housing crisis worse
+			diversify their investments. At the same time, WWII had made a bad housing crisis worse
 			in the city.
 		</p>
 		<p>
@@ -33,7 +33,7 @@
 				>Limited Dividend Housing Companies Law</i
 			>. This gave private developers twenty years of tax exemption in return for capped rent prices
 			and thus limited profits. Some union-sponsored, non-profit cooperatives were built under this
-			program but it was overall unpopular. Most private developers were simply unwilling to
+			program, but it was overall unpopular. Most private developers were simply unwilling to
 			undertake the risk of construction for seemingly less lucrative rent-stabilized units.
 		</p>
 		<div class="citation">
@@ -75,7 +75,7 @@
 			Work began nearly immediately on Parkchester, an "apartment colony" in the southern Bronx,
 			using what they had learned in Queens to construct a massive 12,271 apartment complex. This
 			former orphanage land became largest housing development in American history. The project was
-			a success, with tenants, city leads, and MetLife stockholders satisfied.
+			a success, with tenants, city leaders, and MetLife stockholders satisfied.
 		</p>
 		{#if onToggleParkchester}
 			<button on:click={onToggleParkchester} class="switch-button">
@@ -88,14 +88,14 @@
 <div class="card {cardIndex === 4 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			As the need for affordable housing continued to climb as the 1930s turned into the 1940s,
+			The need for affordable housing continued to climb as the 1930s turned into the 1940s.
 			Robert Moses and Mayor Fiorello La Guardia began planning to offer even more lucrative
 			incentives to private developers. The Metropolitan Life Insurance Company was the perfect
 			target, with WWII war bonds providing a “stupendous increase” to all life insurer assets. The
-			amended 1943 law, extended the tax exemption to twenty-five years, removed income ceilings on
-			occupants, and struck the clause requiring redevelopers to manage relocation proceedings.
-			Functionally, this meant that private developers could now use eminent domain to erect private
-			housing.
+			amended 1943 law extended the tax exemption to twenty-five years, removed income ceilings on
+			occupants, and struck the clause requiring developers to manage relocation proceedings.
+			Functionally, this meant that private developers could now use state-sponsored eminent domain 
+			to erect private housing.
 		</p>
 		<p>
 			Metropolitan Life was the largest employer in the city at this time, with over 15,000
@@ -159,11 +159,11 @@
 <div class="card {cardIndex === 7 ? 'active' : ''}">
 	<ContentCard title="Historical Integration">
 		<p>
-			The real heart of the controversy was the fact that StuyTown was built with public resources,
+			The heart of the controversy was the fact that StuyTown was built with public resources,
 			but did not serve everyone in the public equally. To clear space for the new construction,
 			developers demolished 500 stores and small factories, three churches, three schools, and two
-			theaters. In their place was put private housing, private roads and private parks, for only
-			the benefit of white, middle-class veterans and their family. And while public housing
+			theaters. In their place was put private housing, private roads and private parks, for the
+			sole benefit of white, middle-class veterans and their family. And while public housing
 			projects in the city had to be open to any race, there were not yet any such restrictions on
 			private developments.
 		</p>
