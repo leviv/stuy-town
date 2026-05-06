@@ -410,26 +410,10 @@
 				isCalibrated &&
 				(orientation.heading !== 0 || orientation.pitch !== 0 || orientation.roll !== 0)
 			) {
-				// Log Arduino data for debugging
-				if (Math.random() < 0.01) {
-					// Log occasionally to avoid spam
-					console.log('Raw Arduino data:', orientation);
-					console.log('Calibration offset:', calibrationOffset);
-				}
-
 				// Apply calibration offset to normalize orientation
 				let adjustedPitch = orientation.pitch - calibrationOffset.x;
 				let adjustedHeading = orientation.heading - calibrationOffset.y;
 				let adjustedRoll = orientation.roll - calibrationOffset.z;
-
-				// Log adjusted values occasionally
-				if (Math.random() < 0.01) {
-					console.log('Adjusted orientation:', {
-						pitch: adjustedPitch,
-						heading: adjustedHeading,
-						roll: adjustedRoll
-					});
-				}
 
 				// Movement threshold - need at least 5 degrees of movement to update target
 				const movementThreshold = 5.0;
